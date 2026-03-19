@@ -372,45 +372,48 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 .ch5-formula-display.pulse { animation: ch5Pulse 0.4s ease-out; }
 @keyframes ch5Pulse { 0% { transform: scale(0.95); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
 
-/* ════════ CHAPTER 6: ASSESSMENT ════════ */
-.ch6-scene { padding: 0; display: none; overflow: hidden; position: relative; width: 100vw; height: 100vh; z-index: 2; }
-.ch6-slider { display: flex; width: 200vw; height: 100vh; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-.ch6-slider.slide { transform: translateX(-100vw); }
-.ch6-panel { width: 100vw; height: 100vh; display: flex; padding: 12vh 20px 20px 20px; box-sizing: border-box; }
-.ch6-left, .ch6-right { width: 50%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+/* ════════ CHAPTER 6: ASSESSMENT (SCROLLABLE & CANVAS DRAWING) ════════ */
+.ch6-scene { padding: 12vh 20px 10vh 20px; display: none; width: 100vw; min-height: 100vh; height: auto; flex-direction: column; align-items: center; z-index: 2; position: relative; box-sizing: border-box;}
 .ch6-title { font-size: clamp(1.5rem, 3vw, 2.2rem); color: var(--gold); margin-bottom: 20px; font-weight: 900; text-shadow: 0 4px 15px rgba(255,214,0,0.4); text-align: center; }
 
-.ch6-star-list { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 350px; }
-.ch6-star-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 15px; cursor: grab; transition: all 0.2s; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-.ch6-star-item:active { cursor: grabbing; transform: scale(1.05); background: rgba(255,255,255,0.1); }
-.ch6-star-item.completed { border-color: var(--teal); background: rgba(0,229,200,0.1); }
-.ch6-star-name { font-size: 1.3rem; font-weight: 800; color: #fff; pointer-events: none; }
-.ch6-check { color: var(--teal); font-size: 1.5rem; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-.ch6-star-item.completed .ch6-check { opacity: 1; }
+/* Grid of Star Cards */
+.ch6-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 40px; width: 100%; max-width: 1000px; }
+.ch6-star-card {
+    background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 15px; padding: 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 15px;
+    cursor: pointer; transition: all 0.3s ease; width: clamp(140px, 20vw, 180px); position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+}
+.ch6-star-card:hover { transform: translateY(-5px); border-color: var(--teal); background: rgba(0,229,200,0.1); }
+.ch6-star-card.completed { border-color: var(--gold); background: rgba(255,214,0,0.1); }
+.ch6-star-visual { display: flex; align-items: center; justify-content: center; width: 80px; height: 80px; pointer-events: none; }
+.ch6-star-name { font-size: 1.2rem; font-weight: 900; color: #fff; pointer-events: none; text-align: center; }
+.ch6-check { color: var(--gold); font-size: 1.5rem; opacity: 0; pointer-events: none; transition: opacity 0.3s; position: absolute; top: 10px; right: 15px; }
+.ch6-star-card.completed .ch6-check { opacity: 1; }
 
-.ch6-pedestal-container { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 350px; position: relative; }
-.ch6-pedestal-zone { width: 300px; height: 300px; border: 3px dashed rgba(255,214,0,0.4); border-radius: 20px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 20px; transition: all 0.3s; margin-bottom: 10px; }
-.ch6-pedestal-zone.hovered { border-color: var(--gold); background: rgba(255,214,0,0.1); transform: scale(1.05); }
-.ch6-pedestal { width: 220px; height: 40px; background: linear-gradient(to bottom, #4f46e5, #312e81); border-radius: 10px; border-top: 3px solid #818cf8; text-align: center; line-height: 34px; color: #fff; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+/* Expanding Workspace */
+.ch6-workspace-section { width: 100%; max-width: 900px; background: rgba(0,0,0,0.6); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.2); display: none; flex-direction: column; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); margin-bottom: 40px; }
+.ch6-vars-box { background: rgba(9,3,20,0.8); border: 2px solid var(--pink); border-radius: 15px; padding: 20px 30px; margin-bottom: 25px; font-size: 1.2rem; line-height: 1.8; color: #fff; text-align: center; box-shadow: 0 10px 30px rgba(255,77,158,0.2); width: 100%; }
+.ch6-vars-box span.highlight { color: var(--gold); font-weight: 900; font-size: 1.4rem; margin: 0 5px; }
 
-.ch6-star-display { display: flex; align-items: center; justify-content: center; width: 90px; height: 90px; margin-bottom: 30px; animation: floatY 3s ease-in-out infinite; pointer-events: none; }
+/* Interactive Canvas Settings */
+.canvas-toolbar { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; justify-content: center; flex-wrap: wrap; }
+.tool-btn { background: rgba(255,255,255,0.1); border: 2px solid transparent; color: #fff; padding: 10px 25px; border-radius: 30px; font-weight: 800; cursor: pointer; transition: all 0.2s; font-family: 'Nunito', sans-serif; font-size: 1.1rem; }
+.tool-btn.active { background: var(--teal); color: #090314; border-color: #fff; box-shadow: 0 0 15px rgba(0,229,200,0.6); }
+.tool-btn.clear { background: rgba(239, 71, 111, 0.2); color: #EF476F; border-color: #EF476F; }
+.tool-btn.clear:hover { background: #EF476F; color: #fff; }
 
-.ch6-vars-box { background: rgba(9,3,20,0.8); border: 2px solid var(--pink); border-radius: 15px; padding: 25px; margin-top: 30px; font-size: 1.3rem; line-height: 2; color: #fff; text-align: center; box-shadow: 0 10px 30px rgba(255,77,158,0.2); }
-.ch6-vars-box span.highlight { color: var(--gold); font-weight: 900; font-size: 1.5rem; margin: 0 5px; }
+/* Magical Invert Canvas - Looks dark on screen but exports white background with black ink for printers! */
+.canvas-container { width: 100%; max-width: 800px; display: flex; justify-content: center; border-radius: 15px; overflow: hidden; border: 2px dashed rgba(255,255,255,0.3); background: #000; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); }
+#calcCanvas { background: #ffffff; filter: invert(1); width: 100%; height: auto; aspect-ratio: 16/9; touch-action: none; cursor: crosshair; display: block; }
+.canvas-saved-img { width: 100%; height: auto; display: none; background: #fff; filter: invert(1); aspect-ratio: 16/9; object-fit: contain; }
 
-.ch6-workspace { width: 100%; max-width: 550px; display: flex; flex-direction: column; align-items: center; }
-.ch6-textarea { width: 100%; height: 350px; background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.3); border-radius: 15px; padding: 20px; color: #fff; font-family: 'Nunito', sans-serif; font-size: 1.2rem; resize: none; margin-bottom: 20px; transition: all 0.3s; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
-.ch6-textarea:focus { outline: none; border-color: var(--teal); background: rgba(0,229,200,0.05); }
-.ch6-textarea[readonly] { border-color: #555; color: #aaa; background: rgba(0,0,0,0.6); }
-
-.ch6-btn-row { display: flex; gap: 15px; }
-.btn-pdf { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #06D6A0, #048C6F); border: none; padding: 15px 40px; font-size: 1.3rem; box-shadow: 0 10px 30px rgba(6, 214, 160, 0.4); display: none; z-index: 100; }
+.btn-pdf { background: linear-gradient(135deg, #06D6A0, #048C6F); border: none; padding: 15px 40px; font-size: 1.3rem; box-shadow: 0 10px 30px rgba(6, 214, 160, 0.4); display: none; margin-top: 20px; margin-bottom: 50px; }
 .btn-pdf.show { display: block; animation: fadeInUp 0.5s ease-out; }
 
-/* ════════ PRINT STYLES ════════ */
+/* ════════ PRINT STYLES FOR PDF ════════ */
 #printArea { display: none; }
 @media print {
-  @page { margin: 20mm; size: A4; }
+  @page { margin: 15mm; size: A4; }
   html, body { background: #fff !important; color: #000 !important; overflow: visible !important; height: auto !important; min-height: auto !important; display: block !important; }
   body > *:not(#printArea) { display: none !important; }
   #printArea { display: block !important; width: 100%; font-family: sans-serif; }
@@ -418,9 +421,11 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
   .print-table { width: 100%; border-collapse: collapse; page-break-inside: auto; }
   .print-table tr { page-break-inside: avoid; page-break-after: auto; }
   .print-table th, .print-table td { border: 1px solid black; padding: 15px; font-size: 12pt; text-align: left; vertical-align: top; }
-  .print-table th { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .print-col-vars { width: 35%; line-height: 1.6; }
-  .print-col-ans { width: 65%; white-space: pre-wrap; font-family: monospace; font-size: 11pt; }
+  .print-table th { background: #e0e0e0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .print-col-vars { width: 30%; line-height: 1.8; }
+  .print-col-ans { width: 70%; text-align: center; }
+  /* Since image was drawn with black ink on white bg internally, it prints perfectly without wasting ink */
+  .print-col-ans img { max-width: 100%; max-height: 280px; object-fit: contain; border: 1px solid #ccc; }
 }
 
 /* MISC Utilities */
@@ -770,57 +775,46 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
   </div>
 </div>
 
-<!-- 7. CHAPTER 6 SCENE (ASSESSMENT) -->
+<!-- 7. CHAPTER 6 SCENE (ASSESSMENT - TAP & DRAW) -->
 <div class="scene ch6-scene" id="ch6Scene">
-  <div class="ch6-slider" id="ch6Slider">
-    
-    <!-- Panel 1: Star List & Dropzone -->
-    <div class="ch6-panel" id="ch6Panel1">
-      <div class="ch6-left">
-        <h2 class="ch6-title">Select a Star to Calculate</h2>
-        <div class="ch6-star-list" id="ch6StarList">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-      <div class="ch6-right">
-        <div class="ch6-pedestal-container">
-          <div class="ch6-pedestal-zone" id="ch6PedestalDrop">
-            <div style="font-size: 1.2rem; color: #fff; opacity: 0.5; pointer-events: none; position: absolute; top: 40%;">Drop Star Here</div>
-          </div>
-          <div class="ch6-pedestal">Platform</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Panel 2: Workspace -->
-    <div class="ch6-panel" id="ch6Panel2">
-      <div class="ch6-left">
-        <button class="btn-sky" onclick="ch6GoBack()" style="position: absolute; top: 20px; left: 20px;">⬅ Back to Stars</button>
-        <div class="ch6-pedestal-container" style="transform: scale(1.1); margin-top: 50px;">
-          <div class="ch6-star-display" id="ch6ActiveStarView">
-            <!-- Populated by JS -->
-          </div>
-          <div class="ch6-pedestal">Platform</div>
-        </div>
-        <div class="ch6-vars-box" id="ch6VarsBox">
-          <!-- Variables Populated by JS -->
-        </div>
-      </div>
-      <div class="ch6-right">
-        <div class="ch6-workspace">
-          <h2 class="ch6-title">Calculation Workspace</h2>
-          <textarea id="ch6Workspace" class="ch6-textarea" placeholder="Write your calculation steps here..."></textarea>
-          <div class="ch6-btn-row">
-            <button class="btn-check" id="btnCh6Save" onclick="ch6SaveAns()">Save Progress</button>
-            <button class="btn-sky" id="btnCh6Edit" onclick="ch6EditAns()" style="display: none;">Edit Calculation</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
+  <h2 class="ch6-title">Select a Star to Calculate</h2>
+  <div style="font-size: 1.1rem; margin-bottom: 30px; text-align: center; color: #ccc;">Tap a star to open its calculation workspace.</div>
+  
+  <!-- List of Stars to Tap -->
+  <div class="ch6-grid" id="ch6StarList">
+    <!-- Populated by JS -->
   </div>
 
-  <button class="btn-check btn-pdf" id="btnGeneratePDF" onclick="ch6GeneratePDF()">Generate PDF</button>
+  <!-- Workspace Area (Expands below) -->
+  <div class="ch6-workspace-section" id="ch6WorkspaceSec">
+      <h2 class="ch6-title" id="ch6WsTitle" style="color:var(--pink); font-size:1.8rem; margin-bottom: 5px;">Workspace</h2>
+      <div id="ch6ActiveStarView" class="ch6-star-visual" style="margin-bottom: 20px;"></div>
+      
+      <div class="ch6-vars-box" id="ch6VarsBox">
+        <!-- Variables Populated by JS -->
+      </div>
+      
+      <!-- Canvas Drawing Toolbar -->
+      <div class="canvas-toolbar">
+         <button class="tool-btn active" id="btnToolpen" onclick="ch6SetTool('pen')">✏️ Pen</button>
+         <button class="tool-btn" id="btnTooleraser" onclick="ch6SetTool('eraser')">🧽 Eraser</button>
+         <button class="tool-btn clear" onclick="ch6ClearCanvas()">🗑️ Clear</button>
+      </div>
+
+      <!-- Magic Canvas: Looks dark on screen but exports with white background for print! -->
+      <div class="canvas-container">
+        <canvas id="calcCanvas" width="800" height="500"></canvas>
+        <img id="calcSavedImg" class="canvas-saved-img" alt="Saved Calculation"/>
+      </div>
+      
+      <div style="display: flex; gap: 15px; margin-top: 30px;">
+        <button class="btn-check" id="btnCh6Save" onclick="ch6SaveAns()" style="padding: 12px 40px;">Save Progress</button>
+        <button class="btn-sky" id="btnCh6Edit" onclick="ch6EditAns()" style="display: none; padding: 12px 40px;">Edit Calculation</button>
+      </div>
+  </div>
+
+  <!-- Generate PDF Button -->
+  <button class="btn-check btn-pdf" id="btnGeneratePDF" onclick="ch6GeneratePDF()">Generate PDF Report</button>
 </div>
 
 <!-- PRINT AREA FOR PDF -->
@@ -993,7 +987,7 @@ function goToCh6(){
 
   setTimeout(() => {
     ch5Scene.style.display = 'none';
-    ch6Scene.style.display = 'block'; // ch6 uses block with flex children
+    ch6Scene.style.display = 'flex'; 
     initCh6();
     setTimeout(() => { ch6Scene.style.opacity = '1'; }, 50);
   }, 800);
@@ -1065,8 +1059,8 @@ function restartLesson(){
     if(document.getElementById('ch3Insight')) document.getElementById('ch3Insight').classList.remove('show');
     
     // Clear Ch6 Answers on restart
-    ch6StarsData.forEach(s => s.ans = '');
-    document.getElementById('ch6Slider').classList.remove('slide');
+    ch6StarsData.forEach(s => s.ansImage = null);
+    document.getElementById('ch6WorkspaceSec').style.display = 'none';
     
     setTimeout(() => {
       mainScene.style.display = 'none'; ch2Scene.style.display = 'none'; ch3Scene.style.display = 'none'; ch4Scene.style.display = 'none'; ch5Scene.style.display = 'none'; ch6Scene.style.display = 'none';
@@ -1689,104 +1683,184 @@ function ch5SetFormula(type) {
   display.classList.add('pulse');
 }
 
-/* ════════ CHAPTER 6 LOGIC (ASSESSMENT) ════════ */
+/* ════════ CHAPTER 6 LOGIC (ASSESSMENT - CANVAS DRAWING) ════════ */
 const ch6StarsData = [
-  { id: 'moon', name: 'Moon', m: '-12.7', M: '?', d: '1.3 \u00D7 10\u207B\u2075 pc', find: 'Absolute Magnitude (M)', htmlObj: '<div class="star-body" style="width:75px;height:75px;background:#fff;box-shadow:0 0 20px #fff, 0 0 60px rgba(255,255,255,0.8);border-radius:50%;"></div>', ans: '' },
-  { id: 'sirius', name: 'Sirius', m: '-1.46', M: '1.43', d: '?', find: 'Distance (d)', htmlObj: '<div class="star-body" style="width:30px;height:30px;background:#fff;box-shadow:0 0 15px #fff, 0 0 30px #a0d2ff;border-radius:50%;"></div>', ans: '' },
-  { id: 'vega', name: 'Vega', m: '?', M: '0.58', d: '7.68 pc', find: 'Apparent Magnitude (m)', htmlObj: '<div class="star-body" style="width:20px;height:20px;background:#fff;box-shadow:0 0 10px #fff, 0 0 25px #88ccff;border-radius:50%;"></div>', ans: '' },
-  { id: 'polaris', name: 'Polaris', m: '1.98', M: '-3.6', d: '?', find: 'Distance (d)', htmlObj: '<div class="star-body" style="width:10px;height:10px;background:#ffd0aa;box-shadow:0 0 8px #ffb464;border-radius:50%;"></div>', ans: '' },
-  { id: 'deneb', name: 'Deneb', m: '1.25', M: '?', d: '802 pc', find: 'Absolute Magnitude (M)', htmlObj: '<div class="star-body" style="width:4px;height:4px;background:#bbb;box-shadow:0 0 4px rgba(255,255,255,0.3);border-radius:50%;"></div>', ans: '' }
+  { id: 'moon', name: 'Moon', m: '-12.7', M: '?', d: '1.3 \u00D7 10\u207B\u2075 pc', find: 'Absolute Magnitude (M)', htmlObj: '<div style="width:50px;height:50px;background:#fff;box-shadow:0 0 15px #fff, 0 0 40px rgba(255,255,255,0.8);border-radius:50%;"></div>', ansImage: null },
+  { id: 'sirius', name: 'Sirius', m: '-1.46', M: '1.43', d: '?', find: 'Distance (d)', htmlObj: '<div style="width:30px;height:30px;background:#fff;box-shadow:0 0 15px #fff, 0 0 30px #a0d2ff;border-radius:50%;"></div>', ansImage: null },
+  { id: 'vega', name: 'Vega', m: '?', M: '0.58', d: '7.68 pc', find: 'Apparent Magnitude (m)', htmlObj: '<div style="width:20px;height:20px;background:#fff;box-shadow:0 0 10px #fff, 0 0 25px #88ccff;border-radius:50%;"></div>', ansImage: null },
+  { id: 'polaris', name: 'Polaris', m: '1.98', M: '-3.6', d: '?', find: 'Distance (d)', htmlObj: '<div style="width:10px;height:10px;background:#ffd0aa;box-shadow:0 0 8px #ffb464;border-radius:50%;"></div>', ansImage: null },
+  { id: 'deneb', name: 'Deneb', m: '1.25', M: '?', d: '802 pc', find: 'Absolute Magnitude (M)', htmlObj: '<div style="width:6px;height:6px;background:#bbb;box-shadow:0 0 4px rgba(255,255,255,0.3);border-radius:50%;"></div>', ansImage: null }
 ];
 
 let ch6ActiveIndex = null;
+let ch6Canvas, ch6Ctx;
+let ch6Drawing = false;
+let ch6Tool = 'pen'; // 'pen' or 'eraser'
 
 function initCh6() {
   const list = document.getElementById('ch6StarList');
   list.innerHTML = '';
+  
+  // Render Star Cards
   ch6StarsData.forEach((s, i) => {
-    const item = document.createElement('div');
-    item.className = 'ch6-star-item' + (s.ans.trim() !== '' ? ' completed' : '');
-    item.draggable = true;
-    item.dataset.index = i;
-    item.ondragstart = (e) => { e.dataTransfer.setData('text/plain', i); };
-    item.innerHTML = `<div class="ch6-star-name">${s.name}</div><div class="ch6-check">✔</div>`;
-    list.appendChild(item);
+    const card = document.createElement('div');
+    card.className = 'ch6-star-card' + (s.ansImage ? ' completed' : '');
+    card.onclick = () => openCh6Workspace(i);
+    card.innerHTML = `
+      <div class="ch6-check">✔</div>
+      <div class="ch6-star-visual">${s.htmlObj}</div>
+      <div class="ch6-star-name">${s.name}</div>
+    `;
+    list.appendChild(card);
   });
 
-  const dropZone = document.getElementById('ch6PedestalDrop');
-  dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('hovered'); };
-  dropZone.ondragleave = (e) => { dropZone.classList.remove('hovered'); };
-  dropZone.ondrop = (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('hovered');
-    const idx = e.dataTransfer.getData('text/plain');
-    if (idx !== '') openCh6Workspace(parseInt(idx));
-  };
-
+  initCh6Canvas();
   checkCh6Completion();
+}
+
+function initCh6Canvas() {
+  ch6Canvas = document.getElementById('calcCanvas');
+  if(!ch6Canvas) return;
+  ch6Ctx = ch6Canvas.getContext('2d');
+  
+  // Set up Pointer Events for Drawing (Supports Apple Pencil & Touch)
+  ch6Canvas.addEventListener('pointerdown', ch6StartDraw);
+  ch6Canvas.addEventListener('pointermove', ch6Draw);
+  ch6Canvas.addEventListener('pointerup', ch6StopDraw);
+  ch6Canvas.addEventListener('pointerout', ch6StopDraw);
+  
+  // Fill pure white initially (Because canvas is visually inverted via CSS)
+  ch6ClearCanvas(); 
 }
 
 function openCh6Workspace(idx) {
   ch6ActiveIndex = idx;
   const s = ch6StarsData[idx];
   
+  // Setup Variables UI
+  document.getElementById('ch6WsTitle').innerText = s.name + ' Calculation';
   document.getElementById('ch6ActiveStarView').innerHTML = s.htmlObj;
   document.getElementById('ch6VarsBox').innerHTML = `
-    <strong>${s.name} Variables:</strong><br><br>
-    m = <span class="highlight">${s.m}</span><br>
-    M = <span class="highlight">${s.M}</span><br>
-    d = <span class="highlight">${s.d}</span><br><br>
-    <span style="color:var(--teal)">Find: ${s.find}</span>
+    m = <span class="highlight">${s.m}</span> | 
+    M = <span class="highlight">${s.M}</span> | 
+    d = <span class="highlight">${s.d}</span><br>
+    <span style="color:var(--teal); font-weight:900;">Find: ${s.find}</span>
   `;
   
-  const ws = document.getElementById('ch6Workspace');
-  ws.value = s.ans;
+  const wsSec = document.getElementById('ch6WorkspaceSec');
+  wsSec.style.display = 'flex';
   
-  if(s.ans.trim() !== '') {
-    ws.readOnly = true;
+  // Load Canvas Image or Reset
+  const savedImg = document.getElementById('calcSavedImg');
+  if(s.ansImage) {
+    savedImg.src = s.ansImage;
+    savedImg.style.display = 'block';
+    ch6Canvas.style.display = 'none';
+    document.querySelector('.canvas-toolbar').style.display = 'none';
     document.getElementById('btnCh6Save').style.display = 'none';
     document.getElementById('btnCh6Edit').style.display = 'inline-block';
   } else {
-    ws.readOnly = false;
+    savedImg.style.display = 'none';
+    ch6Canvas.style.display = 'block';
+    document.querySelector('.canvas-toolbar').style.display = 'flex';
     document.getElementById('btnCh6Save').style.display = 'inline-block';
     document.getElementById('btnCh6Edit').style.display = 'none';
+    ch6ClearCanvas();
   }
 
-  document.getElementById('ch6Slider').classList.add('slide');
+  // Scroll to workspace
+  setTimeout(() => wsSec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
 
-function ch6GoBack() {
-  document.getElementById('ch6Slider').classList.remove('slide');
-  setTimeout(initCh6, 300); // Re-render list to show checkmarks smoothly
+// Canvas Drawing Logic
+function getCh6Pos(e) {
+  const rect = ch6Canvas.getBoundingClientRect();
+  const scaleX = ch6Canvas.width / rect.width;
+  const scaleY = ch6Canvas.height / rect.height;
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+}
+
+function ch6StartDraw(e) {
+  ch6Drawing = true;
+  const pos = getCh6Pos(e);
+  ch6Ctx.beginPath();
+  ch6Ctx.moveTo(pos.x, pos.y);
+  e.preventDefault();
+}
+
+function ch6Draw(e) {
+  if (!ch6Drawing) return;
+  const pos = getCh6Pos(e);
+  
+  ch6Ctx.lineWidth = ch6Tool === 'eraser' ? 30 : 4;
+  ch6Ctx.lineCap = 'round';
+  ch6Ctx.lineJoin = 'round';
+  
+  // Since CSS has `filter: invert(1)`, black ink (#000) looks white on screen
+  // When printed/saved, it correctly remains black ink on white background!
+  ch6Ctx.strokeStyle = ch6Tool === 'eraser' ? '#ffffff' : '#000000';
+  
+  ch6Ctx.lineTo(pos.x, pos.y);
+  ch6Ctx.stroke();
+  e.preventDefault();
+}
+
+function ch6StopDraw(e) {
+  if (!ch6Drawing) return;
+  ch6Drawing = false;
+  ch6Ctx.closePath();
+}
+
+function ch6SetTool(tool) {
+  ch6Tool = tool;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btnTool' + tool).classList.add('active');
+  ch6Canvas.style.cursor = tool === 'eraser' ? 'cell' : 'crosshair';
+}
+
+function ch6ClearCanvas() {
+  ch6Ctx.fillStyle = '#ffffff';
+  ch6Ctx.fillRect(0, 0, ch6Canvas.width, ch6Canvas.height);
 }
 
 function ch6SaveAns() {
-  const ws = document.getElementById('ch6Workspace');
-  if (ws.value.trim() === '') {
-      showToast('Please write your calculation steps.');
-      return;
-  }
-  ch6StarsData[ch6ActiveIndex].ans = ws.value;
-  ws.readOnly = true;
+  const dataUrl = ch6Canvas.toDataURL("image/png");
+  ch6StarsData[ch6ActiveIndex].ansImage = dataUrl;
+  
+  document.getElementById('calcSavedImg').src = dataUrl;
+  document.getElementById('calcSavedImg').style.display = 'block';
+  ch6Canvas.style.display = 'none';
+  document.querySelector('.canvas-toolbar').style.display = 'none';
+  
   document.getElementById('btnCh6Save').style.display = 'none';
   document.getElementById('btnCh6Edit').style.display = 'inline-block';
   
   document.getElementById('successFlash').classList.add('run'); 
   setTimeout(() => document.getElementById('successFlash').classList.remove('run'), 500);
-  showToast('Progress Saved!');
-  checkCh6Completion();
+  showToast('Saved to Star Card!');
+  
+  // Update list checkmarks
+  initCh6();
+  
+  // Scroll back to list briefly to see checkmark
+  setTimeout(() => document.getElementById('ch6StarList').scrollIntoView({ behavior: 'smooth', block: 'center' }), 400);
 }
 
 function ch6EditAns() {
-  const ws = document.getElementById('ch6Workspace');
-  ws.readOnly = false;
-  ws.focus();
+  // We keep the old drawing on canvas since we didn't clear it
+  document.getElementById('calcSavedImg').style.display = 'none';
+  ch6Canvas.style.display = 'block';
+  document.querySelector('.canvas-toolbar').style.display = 'flex';
+  
   document.getElementById('btnCh6Save').style.display = 'inline-block';
   document.getElementById('btnCh6Edit').style.display = 'none';
 }
 
 function checkCh6Completion() {
-  const allDone = ch6StarsData.every(s => s.ans.trim() !== '');
+  const allDone = ch6StarsData.every(s => s.ansImage !== null);
   if(allDone) {
     document.getElementById('btnGeneratePDF').classList.add('show');
   } else {
@@ -1806,7 +1880,9 @@ function ch6GeneratePDF() {
         Distance (d) = ${s.d}<br><br>
         <strong>Find: ${s.find}</strong>
       </td>
-      <td class="print-col-ans">${s.ans}</td>
+      <td class="print-col-ans">
+        ${s.ansImage ? `<img src="${s.ansImage}" alt="Calculation"/>` : '(No Calculation provided)'}
+      </td>
     </tr>`;
   });
   tbody.innerHTML = html;

@@ -1591,11 +1591,11 @@ let ch4DragStartX = 0, ch4DragStartY = 0, ch4DragStartT = 0;
 
 const CX = 100; const CY = 550; 
 const ch4Data = {
-  moon:    { id: 'moon',    row: 15, a: 5,  rT: 40,  r10: 400, sApp: 75, sAbs: 10, gApp: '0 0 20px #fff, 0 0 60px rgba(255,255,255,0.8)', gAbs: '0 0 5px #fff', bgApp: '#fff', bgAbs: '#555', lblApp: '<span class="m-text">m = </span>-12.7', lblAbs: '<span class="m-text">M = </span>+32' },
-  sirius:  { id: 'sirius',  row: 32, a: 15, rT: 150, r10: 400, sApp: 30, sAbs: 15, gApp: '0 0 15px #fff, 0 0 30px #a0d2ff', gAbs: '0 0 10px #a0d2ff, 0 0 30px rgba(160,210,255,0.8)', bgApp: '#fff', bgAbs: '#fff', lblApp: '<span class="m-text">m = </span>-1.46', lblAbs: '<span class="m-text">M = </span>+1.4' },
-  vega:    { id: 'vega',    row: 50, a: 25, rT: 280, r10: 400, sApp: 20, sAbs: 25, gApp: '0 0 10px #fff, 0 0 25px #88ccff', gAbs: '0 0 15px #88ccff, 0 0 40px rgba(136,204,255,0.8)', bgApp: '#fff', bgAbs: '#fff', lblApp: '<span class="m-text">m = </span>0.0', lblAbs: '<span class="m-text">M = </span>+0.6' },
-  polaris: { id: 'polaris', row: 68, a: 35, rT: 850, r10: 400, sApp: 10, sAbs: 90, gApp: '0 0 8px #ffb464', gAbs: '0 0 40px #fff, 0 0 120px #ffb464', bgApp: '#ffd0aa', bgAbs: '#ffd0aa', lblApp: '<span class="m-text">m = </span>2.0', lblAbs: '<span class="m-text">M = </span>-3.6' },
-  faint:   { id: 'faint',   row: 85, a: 45, rT: 650, r10: 400, sApp: 4,  sAbs: 45, gApp: '0 0 4px rgba(255,255,255,0.3)', gAbs: '0 0 15px rgba(255,100,100,0.4)', bgApp: '#bbb', bgAbs: '#ff9988', lblApp: '<span class="m-text">m = </span>6.0', lblAbs: '<span class="m-text">M = </span>-3.0' }
+  moon:    { id: 'moon',    row: 15, a: 5,  rT: 40,  r10: 400, sApp: 80, sAbs: 2,  gApp: '0 0 20px #fff, 0 0 60px rgba(255,255,255,0.8)', gAbs: 'none', bgApp: '#fff', bgAbs: '#444', lblApp: '<span class="m-text">m = </span>-12.7', lblAbs: '<span class="m-text">M = </span>+32.0' },
+  sirius:  { id: 'sirius',  row: 32, a: 15, rT: 150, r10: 400, sApp: 35, sAbs: 18, gApp: '0 0 15px #fff, 0 0 30px #a0d2ff', gAbs: '0 0 8px #fff, 0 0 20px #a0d2ff', bgApp: '#fff', bgAbs: '#fff', lblApp: '<span class="m-text">m = </span>-1.46', lblAbs: '<span class="m-text">M = </span>+1.4' },
+  vega:    { id: 'vega',    row: 50, a: 25, rT: 280, r10: 400, sApp: 25, sAbs: 22, gApp: '0 0 10px #fff, 0 0 25px #88ccff', gAbs: '0 0 10px #fff, 0 0 25px #88ccff', bgApp: '#fff', bgAbs: '#fff', lblApp: '<span class="m-text">m = </span>0.0', lblAbs: '<span class="m-text">M = </span>+0.6' },
+  polaris: { id: 'polaris', row: 68, a: 35, rT: 850, r10: 400, sApp: 12, sAbs: 85, gApp: '0 0 8px #ffb464', gAbs: '0 0 30px #fff, 0 0 90px #ffb464', bgApp: '#ffd0aa', bgAbs: '#fff', lblApp: '<span class="m-text">m = </span>2.0', lblAbs: '<span class="m-text">M = </span>-3.6' },
+  faint:   { id: 'faint',   row: 85, a: 45, rT: 650, r10: 400, sApp: 4,  sAbs: 75, gApp: '0 0 4px rgba(255,255,255,0.3)', gAbs: '0 0 25px #fff, 0 0 80px #ff4d9e', bgApp: '#bbb', bgAbs: '#ffb3d9', lblApp: '<span class="m-text">m = </span>6.0', lblAbs: '<span class="m-text">M = </span>-3.0' }
 };
 
 for(let k in ch4Data) {

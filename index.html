@@ -10,9 +10,15 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{--pink:#ff4d9e;--teal:#00e5c8;--gold:#ffd600;--text:#e8e0ff;--white:#fff; --bg-dark:#090314;}
-html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;
-  background:radial-gradient(ellipse at 50% 30%,#1c0a35 0%,var(--bg-dark) 100%);color:#fff; touch-action: none;}
-body{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}
+
+/* ❗️ FIXED: ALLOW SCROLLING ❗️ */
+html,body{
+  width:100%; min-height:100vh; height:auto; overflow-x:hidden; overflow-y:auto; 
+  font-family:'Nunito',sans-serif; color:#fff;
+  background:radial-gradient(ellipse at 50% 30%,#1c0a35 0%,var(--bg-dark) 100%);
+  background-attachment: fixed; /* Keep bg static while scrolling */
+}
+body{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;}
 
 /* Kurzgesagt Style Sparkles */
 #sparkles{position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -26,7 +32,8 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 
 /* ══ SPACESHIP COCKPIT (HUD) ══ */
 .cockpit-frame {
-  position: absolute; inset: 0; pointer-events: none; z-index: 50;
+  position: fixed; /* ❗️ FIXED: STAY ON SCREEN DURING SCROLL ❗️ */
+  inset: 0; pointer-events: none; z-index: 50;
   box-shadow: inset 0 0 150px 50px rgba(0,0,0,0.8), 0 0 0 40px #090314;
   border-radius: 40px; margin: 15px; transform-origin: center center;
 }
@@ -58,7 +65,7 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 @keyframes fadeInUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
 @keyframes fadeInDown { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
 
-.home-bg { position: absolute; inset: 0; overflow: hidden; z-index: 1; pointer-events: none; transform-origin: center center; }
+.home-bg { position: fixed; inset: 0; overflow: hidden; z-index: 1; pointer-events: none; transform-origin: center center; }
 .kz-planet { position: absolute; border-radius: 50%; animation: floatKz 10s ease-in-out infinite alternate; }
 .kz-p1 { width: 150px; height: 150px; background: #EF476F; box-shadow: inset -25px -25px 0px rgba(0,0,0,0.25); top: 15%; left: -20px; animation-delay: -2s; }
 .kz-p2 { width: 100px; height: 100px; background: #06D6A0; box-shadow: inset -15px -15px 0px rgba(0,0,0,0.25); bottom: 25%; right: 5%; animation-direction: alternate-reverse; }
@@ -85,8 +92,9 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 
 /* ══ SCENE LAYOUT ══ */
 .scene{
-  position:relative;z-index:2;width:100vw;height:100vh; display:none; flex-direction:column;align-items:center;justify-content:center;
-  padding-top:0; opacity: 0; transform-origin: center center;
+  position:relative;z-index:2;width:100vw; min-height:100vh; height:auto; display:none; flex-direction:column;align-items:center;justify-content:center;
+  padding: 12vh 0; /* ❗️ PADDING TO AVOID COCKPIT OVERLAP ❗️ */
+  opacity: 0; transform-origin: center center;
 }
 .q-row{margin-bottom:clamp(10px,2vh,20px);text-align:center; z-index: 10;}
 .q-text{ font-size:clamp(1.2rem,2.8vw,1.8rem);font-weight:900;color:#fff; text-shadow:0 0 30px rgba(180,140,255,.7); transition:color .6s ease, text-shadow .6s ease, opacity .4s ease; }
@@ -210,16 +218,26 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 .btn-restart:hover { background: rgba(255,255,255,0.1); }
 .transition-overlay.active .btn-restart { opacity: 1; }
 
+
 /* ════════ CHAPTER 2: THE INVERSE SQUARE LAW ════════ */
-.ch2-inv-layout { position: relative; width: 100%; height: 100vh; max-width: 1000px; display: flex; flex-direction: column; align-items: center; padding: 6vh 20px 10vh 20px; }
-.ch2-inv-step { display: none; flex-direction: column; align-items: center; justify-content: flex-start; width: 100%; height: 100%; opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+/* ❗️ FIXED: FLEXIBLE HEIGHT TO PREVENT SQUISHING ❗️ */
+.ch2-inv-layout { 
+  position: relative; width: 100%; min-height: 100vh; height: auto; max-width: 1000px; 
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  padding: 120px 20px 100px 20px; /* Big padding to clear cockpits and buttons */
+}
+.ch2-inv-step { 
+  display: none; flex-direction: column; align-items: center; justify-content: flex-start; 
+  width: 100%; height: auto; opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; 
+}
 .ch2-inv-step.active { display: flex; opacity: 1; transform: translateY(0); }
-.ch2-title { font-size: clamp(1.6rem, 3.5vw, 2.2rem); font-weight: 900; color: var(--gold); margin-bottom: 10px; text-align: center; text-shadow: 0 4px 15px rgba(255,214,0,0.4); }
-.ch2-desc { font-size: clamp(1rem, 1.8vw, 1.15rem); color: #fff; text-align: center; max-width: 800px; margin-bottom: 20px; line-height: 1.5; }
+.ch2-title { font-size: clamp(1.6rem, 3.5vw, 2.2rem); font-weight: 900; color: var(--gold); margin-bottom: 15px; text-align: center; text-shadow: 0 4px 15px rgba(255,214,0,0.4); }
+.ch2-desc { font-size: 1.15rem; color: #fff; text-align: center; max-width: 800px; margin-bottom: 30px; line-height: 1.5; }
 
 /* Sub 1: Sphere Visualizer */
-.inv-visual-container { display: flex; flex-direction: column; gap: 15px; align-items: center; width: 100%; max-width: 600px; margin-bottom: 20px; }
-.inv-side-view { width: 100%; height: 140px; background: rgba(0,0,0,0.4); border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); }
+.inv-visual-container { display: flex; flex-direction: column; gap: 20px; align-items: center; width: 100%; max-width: 600px; margin-bottom: 30px; }
+/* ❗️ FIXED: ROBUST MIN-HEIGHT INSTEAD OF CLAMP ❗️ */
+.inv-side-view { width: 100%; height: 160px; background: rgba(0,0,0,0.4); border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); flex-shrink: 0; }
 .inv-side-svg { width: 100%; height: 100%; }
 .inv-star-orb { fill: var(--gold); filter: drop-shadow(0 0 10px var(--gold)); }
 .inv-beam { fill: rgba(255,214,0,0.15); transition: d 0.3s ease; }
@@ -228,14 +246,15 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 .inv-tick { stroke: rgba(255,255,255,0.3); stroke-width: 2; }
 .inv-tick-label { fill: #aaa; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: bold; text-anchor: middle; }
 
-.inv-front-view { width: 100%; display: flex; align-items: center; justify-content: center; height: 180px; background: rgba(0,0,0,0.2); border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
+/* ❗️ FIXED: ROBUST HEIGHT ❗️ */
+.inv-front-view { width: 100%; display: flex; align-items: center; justify-content: center; height: 220px; background: rgba(0,0,0,0.2); border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
 .inv-grid { display: grid; gap: 2px; transition: all 0.3s ease; }
 .inv-cell { background: var(--gold); box-shadow: 0 0 8px var(--gold); transition: opacity 0.3s ease, transform 0.3s ease; border-radius: 2px; }
 
-.inv-controls { width: 100%; text-align: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; border: 1px dashed rgba(255,255,255,0.2); }
+.inv-controls { width: 100%; text-align: center; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px dashed rgba(255,255,255,0.2); box-sizing: border-box;}
 .inv-readout { font-size: 1.4rem; font-weight: 900; color: var(--pink); margin-bottom: 10px; }
 .inv-readout span { color: #fff; font-size: 1.1rem; }
-input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin-bottom: 5px; }
+input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin-bottom: 10px; }
 input[type=range]:focus { outline: none; }
 input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: linear-gradient(90deg, var(--gold), var(--teal), var(--pink)); border-radius: 4px; }
 input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: #fff; cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
@@ -245,30 +264,33 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 .inv-q-container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 700px; }
 .inv-q-box { display: none; flex-direction: column; align-items: center; width: 100%; text-align: center; }
 .inv-q-box.active { display: flex; animation: fadeIn 0.5s ease; }
-.inv-q-text { font-size: 1.4rem; font-weight: 800; margin-bottom: 20px; line-height: 1.4; }
-.inv-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; justify-content: center; margin-bottom: 20px; width: 100%; max-width: 480px; margin-left: auto; margin-right: auto; }
-.btn-option { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 12px 25px; font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 800; color: #fff; cursor: pointer; transition: all 0.2s ease; width: 100%; }
+.inv-q-text { font-size: 1.4rem; font-weight: 800; margin-bottom: 30px; line-height: 1.4; }
+.inv-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; justify-content: center; margin-bottom: 30px; width: 100%; max-width: 480px; margin-left: auto; margin-right: auto; }
+.btn-option { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 15px 25px; font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 800; color: #fff; cursor: pointer; transition: all 0.2s ease; width: 100%; box-sizing: border-box;}
 .btn-option:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
 .btn-option.selected { background: var(--pink); border-color: #fff; box-shadow: 0 5px 20px rgba(255,77,158,0.5); }
 .btn-option.wrong { background: #EF476F; border-color: #fff; opacity: 0.8; }
-.inv-feedback { background: rgba(9,3,20,0.9); border: 2px solid var(--teal); border-radius: 15px; padding: 15px 25px; font-size: 1.1rem; color: #fff; max-width: 600px; text-align: center; margin-bottom: 20px; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; display: none; }
+.inv-feedback { background: rgba(9,3,20,0.9); border: 2px solid var(--teal); border-radius: 15px; padding: 20px 25px; font-size: 1.1rem; color: #fff; max-width: 600px; text-align: center; margin-bottom: 20px; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; display: none; }
 .inv-feedback.show { display: block; opacity: 1; transform: translateY(0); }
 .inv-feedback b { color: var(--gold); font-size: 1.2rem; }
 
 /* Sub 3: Graph */
-.inv-graph-container { width: 100%; max-width: 800px; background: rgba(0,0,0,0.4); border-radius: 20px; padding: 15px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center; }
-.chart-wrapper { width: 100%; height: 280px; position: relative; margin-bottom: 15px; }
-.graph-controls { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: center; width: 100%; }
-.graph-guess-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; text-align: center; flex-grow: 1; min-width: 250px; }
-.toggle-box { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.inv-graph-container { width: 100%; max-width: 900px; background: rgba(0,0,0,0.4); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
+/* ❗️ FIXED: TALL FIXED HEIGHT FOR GRAPH ❗️ */
+.chart-wrapper { width: 100%; height: 380px; position: relative; margin-bottom: 25px; flex-shrink: 0; }
+.graph-controls { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: center; width: 100%; margin-bottom: 20px;}
+.graph-guess-box { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; text-align: center; flex: 1 1 300px; box-sizing: border-box;}
+.toggle-box { display: flex; flex-direction: column; gap: 10px; align-items: center; flex: 1 1 250px; }
+
 
 /* ════════ CHAPTER 3: APPARENT MAGNITUDE (BULLETPROOF DRAG & DROP) ════════ */
 .ch3-layout { 
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
-  width: 100%; height: 100vh; max-width: 900px; padding: 2vh 0 10vh 0; 
+  width: 100%; height: auto; min-height: 100vh; max-width: 900px; padding: 12vh 20px 100px 20px; box-sizing: border-box;
 }
+/* Fixed a safe height for the sky to allow space for dragging even on smaller screens */
 .drag-sky { 
-  width: 100%; min-height: 200px; flex-grow: 1; margin-bottom: 10px; border-radius: 20px; 
+  width: 100%; height: 300px; min-height: 300px; flex-grow: 0; margin-bottom: 20px; border-radius: 20px; 
   background: #090314; 
   border: 2px dashed rgba(255,255,255,0.15); 
   box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
@@ -300,28 +322,27 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 .obj-name { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 6px; font-size: 0.9rem; font-weight: 900; color: #fff; white-space: nowrap; pointer-events: none; opacity: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.8); transition: opacity 0.3s ease; }
 .draggable-obj[data-slot-index]:not([data-slot-index="-1"]) .obj-name { opacity: 1; }
 
-.dropzone-container { width: 100%; padding: 0 10px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; margin-top: auto; margin-bottom: 50px; } 
+.dropzone-container { width: 100%; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; margin-bottom: 30px; } 
 .dropzone-labels { display: flex; justify-content: space-between; width: 100%; font-weight: 900; font-size: clamp(0.8rem, 2vw, 1.1rem); color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;}
 .dropzone-slots { display: flex; justify-content: space-between; width: 100%; gap: 5px; }
-.slot-box { width: clamp(60px, 16vw, 90px); height: clamp(60px, 16vw, 90px); border: 2px dashed rgba(255,255,255,0.3); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: all 0.3s ease; }
+.slot-box { width: clamp(60px, 16vw, 90px); height: clamp(60px, 16vw, 90px); border: 2px dashed rgba(255,255,255,0.3); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: all 0.3s ease; flex-shrink: 0;}
 .slot-box.hovered { border-color: var(--teal); background: rgba(0,229,200,0.1); transform: scale(1.05); }
 .slot-box.error { border-color: #EF476F; background: rgba(239,71,111,0.1); animation: shake 0.4s ease; }
 .slot-box.correct { border-color: #06D6A0; background: rgba(6,214,160,0.1); }
 .mag-label { display: block; margin-top: 4px; font-size: clamp(1rem, 2.2vw, 1.3rem); font-weight: 900; color: #fff; opacity: 0; transform: translateY(-10px); transition: all 0.5s ease; white-space: nowrap; text-align: center; }
 .mag-label span.m-text { font-size: 0.9rem; color: #aaa; font-style: italic; margin-right: 3px;}
 
-/* ❗️ CHANGED THIS CSS RULE TO FIX THE MISSING M LABEL ❗️ */
 .draggable-obj.show-mag .mag-label { opacity: 1; transform: translateY(0); }
 
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } }
-.ch3-controls { display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 10; flex-shrink: 0; min-height: 80px; margin-top: 20px;}
+.ch3-controls { display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 10; flex-shrink: 0; min-height: 80px; }
 .insight-top-banner { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: rgba(9, 3, 20, 0.9); border: 2px solid rgba(0,229,200,.6); border-radius: 20px; padding: 20px 40px; font-size: clamp(1rem, 2vw, 1.4rem); font-weight: 900; color: #fff; text-align: center; opacity: 0; pointer-events: none; transition: opacity .6s ease, transform .6s ease; z-index: 50; white-space: nowrap; box-shadow: 0 15px 40px rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
 .insight-top-banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 .insight-top-banner span { color: var(--gold); }
 
 /* ════════ CHAPTER 4: ABSOLUTE MAGNITUDE ════════ */
-.ch4-scene { position: relative; z-index: 2; width: 100vw; height: 100vh; display: none; flex-direction: column; align-items: center; justify-content: center; padding-top: 4vh; opacity: 0; }
-.ch4-container { position: relative; width: 95vw; max-width: 1000px; aspect-ratio: 10 / 6; margin: 0 auto; }
+.ch4-scene { position: relative; z-index: 2; width: 100vw; height: auto; min-height: 100vh; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 10vh 20px; box-sizing: border-box;}
+.ch4-container { position: relative; width: 100%; max-width: 1000px; aspect-ratio: 10 / 6; margin: 0 auto; flex-shrink: 0;}
 .ch4-svg-layer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 .ch4-ray { stroke: rgba(255,255,255,0.4); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 10 10; stroke-dashoffset: 1500; transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease; opacity: 0; }
 .ch4-ray.show { stroke-dashoffset: 0; opacity: 0.8; }
@@ -525,7 +546,7 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
       <div class="inv-graph-container">
         <div class="graph-controls">
           <div class="graph-guess-box">
-            <div style="font-size: 1.1rem; font-weight: 800; margin-bottom: 10px;">Select Distance (d): <span id="lbl-d" style="color:var(--teal)">2</span></div>
+            <div style="font-size: 1.1rem; font-weight: 800; margin-bottom: 10px;">Select Distance (d): <span id="lbl-d" style="color:var(--teal)">2.0</span></div>
             <input type="range" id="guess-d" min="1" max="10" step="0.5" value="2" oninput="updateGuessPoint()">
             
             <div style="font-size: 1.1rem; font-weight: 800; margin-top: 15px; margin-bottom: 10px;">Guess Intensity (I): <span id="lbl-i" style="color:var(--pink)">0.50</span></div>
@@ -1045,7 +1066,7 @@ function initInvChart() {
               type: 'line', label: 'True Intensity (I = 1/d²)', data: trueData,
               borderColor: '#00e5c8', borderWidth: 3, pointRadius: 0, fill: false, hidden: true
           }, {
-              type: 'scatter', label: 'Your Guess', data: [{x: 2, y: 0.5}],
+              type: 'scatter', label: 'Your Guess', data: [{x: 2.0, y: 0.50}], /* Initialize matching UI values */
               backgroundColor: '#ff4d9e', pointRadius: 8, pointHoverRadius: 10, pointBorderColor: '#fff', pointBorderWidth: 2
           }]
       },
@@ -1410,7 +1431,7 @@ function renderCh4() {
       sc.classList.remove('draggable'); document.getElementById('ray-' + d.id).classList.remove('show');
       sc.style.left = d.row + '%'; sc.style.top = '40%';
       obj.style.width = (d.isAt10pc ? d.sAbs : d.sApp) + 'px'; obj.style.height = (d.isAt10pc ? d.sAbs : d.sApp) + 'px';
-      obj.style.boxShadow = d.isAt10pc ? d.gAbs : d.gApp; obj.style.background = d.isAt10pc ? d.bgAbs : d.bgApp;
+      obj.style.boxShadow = d.isAt10pc ? d.gAbs : d.gApp; obj.style.background = d.isAt10pc ? d.bgApp : d.bgApp;
       mag.innerHTML = d.isAt10pc ? d.lblAbs : d.lblApp; mag.classList.add('show'); sc.querySelector('.ch4-name').style.opacity = '1';
     }
   }

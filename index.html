@@ -391,7 +391,12 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 .ch6-star-card.completed .ch6-check { opacity: 1; }
 
 /* Expanding Workspace */
-.ch6-workspace-section { width: 100%; max-width: 900px; background: rgba(0,0,0,0.6); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.2); display: none; flex-direction: column; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); margin-bottom: 40px; }
+.ch6-workspace-section { 
+  width: 100%; max-width: 900px; background: rgba(0,0,0,0.6); border-radius: 20px; padding: 30px; 
+  border: 1px solid rgba(255,255,255,0.2); display: none; flex-direction: column; align-items: center; 
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8); margin-bottom: 40px; 
+  -webkit-user-select: none; user-select: none; /* Prevents text selection while drawing */
+}
 .ch6-vars-box { background: rgba(9,3,20,0.8); border: 2px solid var(--pink); border-radius: 15px; padding: 20px 30px; margin-bottom: 25px; font-size: 1.2rem; line-height: 1.8; color: #fff; text-align: center; box-shadow: 0 10px 30px rgba(255,77,158,0.2); width: 100%; }
 .ch6-vars-box span.highlight { color: var(--gold); font-weight: 900; font-size: 1.4rem; margin: 0 5px; }
 
@@ -403,12 +408,29 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 .tool-btn.clear:hover { background: #EF476F; color: #fff; }
 
 /* Magical Invert Canvas - Looks dark on screen but exports white background with black ink for printers! */
-.canvas-container { width: 100%; max-width: 800px; display: flex; justify-content: center; border-radius: 15px; overflow: hidden; border: 2px dashed rgba(255,255,255,0.3); background: #000; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); }
-#calcCanvas { background: #ffffff; filter: invert(1); width: 100%; height: auto; aspect-ratio: 16/9; touch-action: none; cursor: crosshair; display: block; }
-.canvas-saved-img { width: 100%; height: auto; display: none; background: #fff; filter: invert(1); aspect-ratio: 16/9; object-fit: contain; }
+.canvas-container { 
+  width: 100%; max-width: 800px; display: flex; justify-content: center; border-radius: 15px; overflow: hidden; 
+  border: 2px dashed rgba(255,255,255,0.3); background: #000; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); 
+  touch-action: none; -webkit-user-select: none; user-select: none;
+}
+#calcCanvas { 
+  background: #ffffff; filter: invert(1); width: 100%; height: auto; aspect-ratio: 16/9; 
+  touch-action: none; cursor: crosshair; display: block; -webkit-touch-callout: none;
+}
+.canvas-saved-img { width: 100%; height: auto; display: none; background: #fff; filter: invert(1); aspect-ratio: 16/9; object-fit: contain; pointer-events: none; }
 
 .btn-pdf { background: linear-gradient(135deg, #06D6A0, #048C6F); border: none; padding: 15px 40px; font-size: 1.3rem; box-shadow: 0 10px 30px rgba(6, 214, 160, 0.4); display: none; margin-top: 20px; margin-bottom: 50px; }
 .btn-pdf.show { display: block; animation: fadeInUp 0.5s ease-out; }
+
+/* Formula Popup Styles */
+.btn-show-formula { position: fixed; top: clamp(10px, 3vh, 20px); right: clamp(10px, 3vw, 20px); z-index: 100; background: rgba(0,229,200,0.15); border: 2px solid var(--teal); color: #fff; padding: 8px 16px; border-radius: 30px; font-family: 'Nunito', sans-serif; font-weight: 800; cursor: pointer; backdrop-filter: blur(5px); box-shadow: 0 4px 15px rgba(0,229,200,0.2); transition: all 0.3s; }
+.btn-show-formula:hover { background: var(--teal); color: #090314; box-shadow: 0 4px 20px rgba(0,229,200,0.6); transform: scale(1.05); }
+
+.formula-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; backdrop-filter: blur(4px); }
+.formula-popup.show { display: flex; opacity: 1; }
+.formula-popup-content { background: #090314; border: 2px solid var(--teal); border-radius: 20px; padding: 40px 30px; position: relative; max-width: 600px; width: 90%; box-shadow: 0 15px 50px rgba(0,229,200,0.3); text-align: center; }
+.formula-close { position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: #fff; font-size: 1.8rem; cursor: pointer; transition: color 0.2s; }
+.formula-close:hover { color: #EF476F; }
 
 /* ════════ PRINT STYLES FOR PDF ════════ */
 #printArea { display: none; }
@@ -777,6 +799,9 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 
 <!-- 7. CHAPTER 6 SCENE (ASSESSMENT - TAP & DRAW) -->
 <div class="scene ch6-scene" id="ch6Scene">
+  <button class="btn-prev-page show" onclick="goBackToCh5()"><span>➔</span> Back</button>
+  <button class="btn-show-formula" onclick="openFormulaPopup()">💡 Formula</button>
+
   <h2 class="ch6-title">Select a Star to Calculate</h2>
   <div style="font-size: 1.1rem; margin-bottom: 30px; text-align: center; color: #ccc;">Tap a star to open its calculation workspace.</div>
   
@@ -815,6 +840,19 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 
   <!-- Generate PDF Button -->
   <button class="btn-check btn-pdf" id="btnGeneratePDF" onclick="ch6GeneratePDF()">Generate PDF Report</button>
+</div>
+
+<!-- FORMULA POPUP MODAL -->
+<div class="formula-popup" id="formulaPopup">
+  <div class="formula-popup-content">
+     <button class="formula-close" onclick="closeFormulaPopup()">✖</button>
+     <h3 style="color:var(--pink); margin-bottom:20px; font-size:1.8rem;">Distance Modulus Formulas</h3>
+     <div style="margin-bottom:15px; font-size:1.2rem; color:#fff;"><b>Master Equation:</b><br>m - M = 5 log₁₀(d) - 5</div>
+     <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
+     <div style="margin-bottom:15px; font-size:1.15rem; color:var(--pink);"><b>Find Absolute (M):</b><br>M = m - 5 log₁₀(d) + 5</div>
+     <div style="margin-bottom:15px; font-size:1.15rem; color:var(--gold);"><b>Find Distance (d):</b><br>d = 10<sup>(m - M + 5) / 5</sup></div>
+     <div style="font-size:1.15rem; color:var(--teal);"><b>Find Apparent (m):</b><br>m = M + 5 log₁₀(d) - 5</div>
+  </div>
 </div>
 
 <!-- PRINT AREA FOR PDF -->
@@ -1050,6 +1088,20 @@ function goBackToCh4(){
   setTimeout(() => { transOverlay.classList.remove('active'); }, 2000);
 }
 
+function goBackToCh5(){
+  transSub.textContent = 'Chapter 5';
+  transTitle.textContent = 'Calculations';
+  transBtn.style.display = 'none';
+  transOverlay.classList.remove('glass-mode'); transOverlay.classList.add('solid-mode'); transOverlay.classList.add('active');
+
+  setTimeout(() => {
+    ch6Scene.style.display = 'none';
+    ch5Scene.style.display = 'flex';
+    setTimeout(() => { ch5Scene.style.opacity = '1'; }, 50);
+  }, 800);
+  setTimeout(() => { transOverlay.classList.remove('active'); }, 2000);
+}
+
 function restartLesson(){
   transSub.textContent = 'System Reset'; transTitle.textContent = 'Returning to Base...'; transBtn.style.display = 'none';
   transOverlay.classList.remove('glass-mode'); transOverlay.classList.add('solid-mode'); transOverlay.classList.add('active');
@@ -1081,6 +1133,14 @@ function showToast(msg) {
   toastMsg.innerText = msg;
   toastMsg.classList.add('show');
   setTimeout(() => toastMsg.classList.remove('show'), 2000);
+}
+
+function openFormulaPopup() {
+  document.getElementById('formulaPopup').classList.add('show');
+}
+
+function closeFormulaPopup() {
+  document.getElementById('formulaPopup').classList.remove('show');
 }
 
 /* ════════ CHAPTER 1 LOGIC ════════ */
@@ -1728,6 +1788,10 @@ function initCh6Canvas() {
   ch6Canvas.addEventListener('pointermove', ch6Draw);
   ch6Canvas.addEventListener('pointerup', ch6StopDraw);
   ch6Canvas.addEventListener('pointerout', ch6StopDraw);
+  
+  // Stop iOS scrolling/highlighting strictly
+  ch6Canvas.addEventListener('touchstart', (e) => e.preventDefault(), {passive: false});
+  ch6Canvas.addEventListener('touchmove', (e) => e.preventDefault(), {passive: false});
   
   // Fill pure white initially (Because canvas is visually inverted via CSS)
   ch6ClearCanvas(); 

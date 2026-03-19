@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Star Brightness - Interactive Module</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet"/>
+<!-- Add Chart.js for Chapter 2 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--pink:#ff4d9e;--teal:#00e5c8;--gold:#ffd600;--text:#e8e0ff;--white:#fff; --bg-dark:#090314;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;
+  background:radial-gradient(ellipse at 50% 30%,#1c0a35 0%,var(--bg-dark) 100%);color:#fff; touch-action: none;}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}
+
+/* Kurzgesagt Style Sparkles */
+#sparkles{position:fixed;inset:0;pointer-events:none;z-index:0;
+  display:flex; align-items:center; justify-content:center; transform-origin: center center;}
+.sp{
+  position:absolute;background:#fff;
+  clip-path: polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%);
+  animation:twinkle linear infinite;
+}
+@keyframes twinkle{0%,100%{opacity:.15;transform:scale(0.8)}50%{opacity:.9;transform:scale(1.4)}}
+
+/* ══ SPACESHIP COCKPIT (HUD) ══ */
+.cockpit-frame {
+  position: absolute; inset: 0; pointer-events: none; z-index: 50;
+  box-shadow: inset 0 0 150px 50px rgba(0,0,0,0.8), 0 0 0 40px #090314;
+  border-radius: 40px; margin: 15px; transform-origin: center center;
+}
+.cockpit-hud { position: absolute; inset: 25px; border: 1.5px solid rgba(0, 229, 200, 0.15); border-radius: 20px; }
+.hud-corner { position: absolute; width: 50px; height: 50px; border-color: rgba(0, 229, 200, 0.6); border-style: solid; border-width: 0; }
+.tl { top: -1.5px; left: -1.5px; border-top-width: 4px; border-left-width: 4px; border-top-left-radius: 20px; }
+.tr { top: -1.5px; right: -1.5px; border-top-width: 4px; border-right-width: 4px; border-top-right-radius: 20px; }
+.bl { bottom: -1.5px; left: -1.5px; border-bottom-width: 4px; border-left-width: 4px; border-bottom-left-radius: 20px; }
+.br { bottom: -1.5px; right: -1.5px; border-bottom-width: 4px; border-right-width: 4px; border-bottom-right-radius: 20px; }
+
+/* ══ HOME SCREEN ══ */
+.home-screen {
+  position: absolute; inset: 0; z-index: 1000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; background: transparent;
+}
+.home-ui-container { display: flex; flex-direction: column; align-items: center; transition: opacity 0.8s ease, transform 0.8s ease; }
+.home-tag {
+  color: #06D6A0; font-size: clamp(.9rem, 2vw, 1.2rem); font-weight: 900;
+  letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px;
+  text-shadow: 2px 2px 0px rgba(0,0,0,0.5); animation: fadeInDown 1s ease-out; z-index: 10;
+}
+.home-title {
+  font-size: clamp(3.5rem, 8vw, 6.5rem); font-weight: 900; color: #fff; text-align: center; line-height: 1.1; margin-bottom: 50px;
+  text-shadow: 5px 5px 0px rgba(0,0,0,0.4); animation: floatTitle 4s ease-in-out infinite, fadeInUp 1s ease-out; z-index: 10;
+}
+.home-title span { color: #FFD166; }
+
+@keyframes floatTitle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes fadeInUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInDown { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
+
+.home-bg { position: absolute; inset: 0; overflow: hidden; z-index: 1; pointer-events: none; transform-origin: center center; }
+.kz-planet { position: absolute; border-radius: 50%; animation: floatKz 10s ease-in-out infinite alternate; }
+.kz-p1 { width: 150px; height: 150px; background: #EF476F; box-shadow: inset -25px -25px 0px rgba(0,0,0,0.25); top: 15%; left: -20px; animation-delay: -2s; }
+.kz-p2 { width: 100px; height: 100px; background: #06D6A0; box-shadow: inset -15px -15px 0px rgba(0,0,0,0.25); bottom: 25%; right: 5%; animation-direction: alternate-reverse; }
+.kz-p3 { width: 60px; height: 60px; background: #118AB2; box-shadow: inset -10px -10px 0px rgba(0,0,0,0.3); top: 25%; right: 10%; }
+@keyframes floatKz { 0% { transform: translateY(0px) rotate(0deg); } 100% { transform: translateY(-30px) rotate(15deg); } }
+
+.btn-start {
+  background: #EF476F; border: 3px solid #FFF; border-radius: 50px; padding: 16px 48px; font-family: 'Nunito', sans-serif;
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem); font-weight: 900; color: #fff; cursor: pointer; box-shadow: 0 8px 0px #900C3F, 0 15px 25px rgba(0,0,0,0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); animation: fadeInUp 1s ease-out 0.2s backwards; z-index: 10;
+}
+.btn-start:hover { transform: translateY(-4px); box-shadow: 0 12px 0px #900C3F, 0 20px 30px rgba(0,0,0,0.4); }
+.btn-start:active { transform: translateY(8px); box-shadow: 0 0px 0px #900C3F, 0 5px 10px rgba(0,0,0,0.3); }
+
+/* Generic Check/Action Button Style */
+.btn-check {
+  background: linear-gradient(135deg, var(--teal), #00b8a0); border: none; border-radius: 30px;
+  padding: 12px 30px; font-family: 'Nunito', sans-serif; font-size: 1.1rem; font-weight: 900; color: #fff;
+  cursor: pointer; box-shadow: 0 5px 15px rgba(0,229,200,.3); transition: all 0.2s ease;
+}
+.btn-check:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0,229,200,.5); }
+.btn-check:active:not(:disabled) { transform: scale(0.95); }
+.btn-check:disabled { opacity: 0.5; cursor: not-allowed; background: #666; box-shadow: none; filter: grayscale(1); }
+
+/* ══ SCENE LAYOUT ══ */
+.scene{
+  position:relative;z-index:2;width:100vw;height:100vh; display:none; flex-direction:column;align-items:center;justify-content:center;
+  padding-top:0; opacity: 0; transform-origin: center center;
+}
+.q-row{margin-bottom:clamp(10px,2vh,20px);text-align:center; z-index: 10;}
+.q-text{ font-size:clamp(1.2rem,2.8vw,1.8rem);font-weight:900;color:#fff; text-shadow:0 0 30px rgba(180,140,255,.7); transition:color .6s ease, text-shadow .6s ease, opacity .4s ease; }
+
+/* ══ CHAPTER 1: APPARENT VS TRUE ══ */
+.universe{ position:relative;width:98vw;max-width:1280px; height:clamp(300px,56vh,480px); perspective:1400px;flex-shrink:0; }
+.cosmo{ position:absolute;inset:0;transform-style:preserve-3d; transform:rotateX(0deg) rotateY(0deg) scale(1) translateZ(0) translateY(0); transition:transform 1.6s cubic-bezier(.4,0,.2,1),opacity .8s ease; }
+.cosmo.zoomed{transform:rotateX(48deg) rotateY(-28deg) scale(.46) translateZ(-80px) translateY(80px);}
+.cosmo.fadeout{opacity:0;pointer-events:none;}
+.ground{ position:absolute;bottom:0;left:5%;width:90%;height:2px; background:linear-gradient(90deg,transparent,rgba(0,229,200,.5) 15%,rgba(0,229,200,.5) 85%,transparent); opacity:0;transition:opacity .6s ease 1.2s; }
+.cosmo.zoomed .ground{opacity:1;}
+.earth-dot{ position:absolute;left:2%;bottom:-4px; display:flex;flex-direction:column;align-items:center;gap:5px; opacity:0;transform:translateX(-16px); transition:opacity .5s ease .6s,transform .5s ease .6s; }
+.cosmo.zoomed .earth-dot{opacity:1;transform:translateX(0);}
+.earth-ball{ width:40px;height:40px;border-radius:50%; background:radial-gradient(circle at 35% 35%,#6ec6ff,#1976d2 50%,#0d47a1); box-shadow:0 0 16px rgba(100,180,255,.6); }
+.earth-lbl{font-size:.72rem;font-weight:900;color:var(--teal);}
+.ddash{position:absolute;bottom:4px;left:0;height:2px;width:0; background:repeating-linear-gradient(90deg,rgba(0,229,200,.5) 0,rgba(0,229,200,.5) 7px,transparent 7px,transparent 15px); transition:width 0s;}
+.cosmo.zoomed .ddash.d1{width:22%;transition:width .8s ease .7s;} .cosmo.zoomed .ddash.d2{width:53%;transition:width .9s ease .9s;} .cosmo.zoomed .ddash.d3{width:85%;transition:width 1s ease 1.1s;}
+.stars-row{ position:absolute;bottom:28px;left:0;width:100%; display:flex;align-items:center;justify-content:center; gap:clamp(100px,18vw,260px); transition:gap 1.4s cubic-bezier(.4,0,.2,1),justify-content 1.4s ease,padding 1.4s ease; }
+.cosmo.zoomed .stars-row{justify-content:flex-start;align-items:flex-end;padding-left:9%;gap:0;}
+.star-col{ display:flex;flex-direction:column;align-items:center; position:relative;flex-shrink:0;gap:16px; transition:transform 1.5s cubic-bezier(.4,0,.2,1),margin 1.5s cubic-bezier(.4,0,.2,1); }
+.cosmo.zoomed .star-col.sa{transform:translateZ(80px) translateX(0px); margin-right:150px;} .cosmo.zoomed .star-col.sb{transform:translateZ(-200px) translateX(120px); margin-right:290px;} .cosmo.zoomed .star-col.sc{transform:translateZ(-520px) translateX(270px);}
+.lbadge{font-size:clamp(.8rem,1.5vw,.98rem);font-weight:900; padding:5px 16px;border-radius:8px;white-space:nowrap;color:#fff;}
+.lp{background:var(--pink);} .lt{background:#009e88;} .ly{background:#b07000;}
+
+/* Orbs & Spikes */
+.pt{border-radius:50%;position:relative; display:flex;align-items:center;justify-content:center; transition:all 1.15s cubic-bezier(.4,0,.2,1);}
+.sb .pt{width:22px;height:22px;background:radial-gradient(circle,#fff 15%,#c0e0ff 55%,transparent); box-shadow:0 0 0 5px rgba(160,210,255,.95),0 0 20px 10px rgba(100,170,255,.85), 0 0 55px 25px rgba(60,120,255,.60),0 0 110px 50px rgba(40,90,255,.28);}
+.sa .pt{width:15px;height:15px;background:radial-gradient(circle,#fff 20%,#fff8cc 60%,transparent); box-shadow:0 0 0 3px rgba(255,240,160,.95),0 0 12px 5px rgba(255,210,60,.78), 0 0 30px 12px rgba(255,170,0,.42),0 0 55px 22px rgba(220,130,0,.16);}
+.sc .pt{width:8px;height:8px;background:radial-gradient(circle,#fff 30%,#ffd0aa 70%,transparent); box-shadow:0 0 0 2px rgba(255,180,100,.70),0 0 5px 3px rgba(255,110,40,.38), 0 0 10px 5px rgba(200,60,0,.14);}
+.spike{position:absolute;top:50%;left:50%;border-radius:2px;pointer-events:none; transform-origin:bottom center;transition:height .9s ease,opacity .9s ease;}
+.spike-b{width:2px;background:linear-gradient(to top,rgba(160,210,255,.9),transparent);} .spike-a{width:1.5px;background:linear-gradient(to top,rgba(255,220,80,.85),transparent);} .spike-c{width:1px;background:linear-gradient(to top,rgba(255,140,60,.55),transparent);}
+.cosmo.zoomed .sa .pt{width:clamp(68px,8.5vw,105px);height:clamp(68px,8.5vw,105px); background:radial-gradient(circle at 35% 35%,#fffde0,#ffd600 42%,#ff9000 82%); box-shadow:0 0 40px 12px rgba(255,200,0,.70),0 0 80px 28px rgba(255,150,0,.28);}
+.cosmo.zoomed .sb .pt{width:clamp(95px,12vw,150px);height:clamp(95px,12vw,150px); background:radial-gradient(circle at 35% 35%,#f0f8ff,#88ccff 38%,#1a55ff 80%); box-shadow:0 0 60px 20px rgba(80,160,255,.80),0 0 130px 48px rgba(40,80,255,.34);}
+.cosmo.zoomed .sc .pt{width:clamp(145px,19vw,230px);height:clamp(145px,19vw,230px); background:radial-gradient(circle at 35% 35%,#ffece0,#ff6633 42%,#cc1100 82%); box-shadow:0 0 95px 34px rgba(255,80,30,.88),0 0 190px 75px rgba(200,40,0,.40);}
+.cosmo.zoomed .spike{opacity:0;height:0 !important;}
+.cosmo.zoomed .pt{animation:floatY 3.5s ease-in-out infinite;}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.pt::after{content:'';position:absolute;inset:-30%;border-radius:50%;opacity:0;transition:opacity .8s ease;}
+.cosmo.zoomed .pt::after{opacity:1;animation:halo 2.5s ease-in-out infinite;}
+@keyframes halo{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.18);opacity:1}}
+.sa .pt::after{background:radial-gradient(circle,rgba(255,200,0,.35),transparent);} .sb .pt::after{background:radial-gradient(circle,rgba(80,160,255,.35),transparent);} .sc .pt::after{background:radial-gradient(circle,rgba(255,100,40,.40),transparent);}
+
+.dist-info{position:absolute;bottom:-68px;left:50%;transform:translateX(-50%); display:flex;flex-direction:column;align-items:center;gap:4px; opacity:0;white-space:nowrap;pointer-events:none;transition:opacity .6s ease 1.3s;}
+.cosmo.zoomed .dist-info{opacity:1;}
+.dist-pc{font-size:clamp(.95rem,1.7vw,1.25rem);font-weight:900;padding:5px 16px;border-radius:9px;color:#fff;} .dist-lbl{font-size:clamp(.7rem,1.1vw,.86rem);font-weight:800;color:rgba(255,255,255,.52); text-transform:uppercase;}
+
+.eq-stage{position:absolute;inset:0;pointer-events:none;z-index:6;}
+.eq-ruler{ position:absolute;bottom:36px;left:8%;width:84%;height:2px; background:linear-gradient(90deg,transparent,rgba(0,229,200,.45) 6%,rgba(0,229,200,.45) 94%,transparent); opacity:0;transition:opacity .5s ease; }
+.eq-ruler.show{opacity:1;} .eq-ruler-lbl{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%); font-size:.72rem;font-weight:900;color:var(--teal);white-space:nowrap;opacity:.6;}
+.eq-card{ position:absolute; display:flex;flex-direction:column;align-items:center;gap:8px; opacity:0;pointer-events:none; }
+.eq-card.ready{opacity:1;pointer-events:all;}
+.eq-orb{border-radius:50%;position:relative;animation:floatY 3.5s ease-in-out infinite;}
+.eq-orb::after{content:'';position:absolute;inset:-28%;border-radius:50%;animation:halo 2.5s ease-in-out infinite;}
+.eq-orb.oa{background:radial-gradient(circle at 35% 35%,#fffde0,#ffd600 42%,#ff9000 82%); box-shadow:0 0 30px 10px rgba(255,200,0,.65),0 0 65px 25px rgba(255,150,0,.25);} .eq-orb.oa::after{background:radial-gradient(circle,rgba(255,200,0,.35),transparent);}
+.eq-orb.ob{background:radial-gradient(circle at 35% 35%,#f0f8ff,#88ccff 38%,#1a55ff 80%); box-shadow:0 0 55px 18px rgba(80,160,255,.80),0 0 120px 45px rgba(40,80,255,.32);animation-delay:.3s;} .eq-orb.ob::after{background:radial-gradient(circle,rgba(80,160,255,.35),transparent);}
+.eq-orb.oc{background:radial-gradient(circle at 35% 35%,#ffece0,#ff6633 42%,#cc1100 82%); box-shadow:0 0 90px 32px rgba(255,80,30,.88),0 0 190px 75px rgba(200,40,0,.40);animation-delay:.6s;} .eq-orb.oc::after{background:radial-gradient(circle,rgba(255,100,40,.40),transparent);}
+.surprise{ position:absolute;top:-40px;left:50%;transform:translateX(-50%); background:rgba(255,80,30,.15);border:2px solid rgba(255,130,50,.65); color:#ffb090;padding:4px 14px;border-radius:20px; font-size:clamp(.7rem,1.2vw,.84rem);font-weight:900;white-space:nowrap;opacity:0; }
+.surprise.pop{animation:popIn .5s ease forwards;}
+@keyframes popIn{0%{opacity:0;transform:translateX(-50%) translateY(8px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
+.eq-name{font-size:clamp(.78rem,1.4vw,.96rem);font-weight:900; padding:5px 16px;border-radius:8px;white-space:nowrap;color:#fff; opacity:0;transition:opacity .5s ease .9s;flex-shrink:0;}
+.eq-card.ready .eq-name{opacity:1;}
+
+.insight-banner{
+  margin-top:clamp(6px,1.2vh,14px); background:rgba(0,229,200,.08);border:2px solid rgba(0,229,200,.35);
+  border-radius:14px;padding:10px 28px; font-size:clamp(.82rem,1.5vw,1.05rem);font-weight:900;color:var(--teal);
+  text-align:center;opacity:0;transform:translateY(10px); transition:opacity .6s ease,transform .6s ease;flex-shrink:0; z-index: 10;
+}
+.insight-banner.show{opacity:1;transform:translateY(0);}
+
+.btn-container { position:fixed;bottom:clamp(24px,4vh,48px);left:0; width:100%;height:66px;z-index:100; display:flex;align-items:center;justify-content:center; }
+.btn-row{ position:absolute; inset:0; display:flex;gap:16px;align-items:center;justify-content:center; opacity:0;pointer-events:none;transform:translateY(12px); transition:opacity .5s ease, transform .5s ease; }
+.btn-row.active{ opacity:1;pointer-events:all;transform:translateY(0); }
+.btn-c{ border:none;border-radius:50%; width:66px;height:66px;font-size:1.8rem; display:flex;align-items:center;justify-content:center; cursor:pointer;color:#fff;flex-shrink:0; transition:transform .22s ease,opacity .4s ease,box-shadow .3s ease,background .4s ease; }
+.btn-c:hover:not(:disabled){transform:scale(1.11);} .btn-c:active:not(:disabled){transform:scale(.92);}
+.btn-cam{ background:linear-gradient(135deg,var(--pink),#a8005e); box-shadow:0 5px 22px rgba(255,77,158,.55); animation:pbtn 2.2s ease-in-out infinite; }
+@keyframes pbtn{0%,100%{box-shadow:0 5px 22px rgba(255,77,158,.55);} 50%{box-shadow:0 8px 38px rgba(255,77,158,.9),0 0 55px rgba(255,77,158,.22);}}
+.btn-cam.teal{background:linear-gradient(135deg,#00b8a0,#004d40);animation:pteal 2.2s ease-in-out infinite;}
+@keyframes pteal{0%,100%{box-shadow:0 5px 22px rgba(0,229,200,.5);} 50%{box-shadow:0 8px 38px rgba(0,229,200,.85),0 0 55px rgba(0,229,200,.2);}}
+.btn-cmp{ background:linear-gradient(135deg,#7c3aed,#4f46e5); box-shadow:0 5px 22px rgba(124,58,237,.55); animation:pvio 2.2s ease-in-out infinite; }
+@keyframes pvio{0%,100%{box-shadow:0 5px 22px rgba(124,58,237,.55);} 50%{box-shadow:0 8px 38px rgba(124,58,237,.9),0 0 55px rgba(124,58,237,.22);}}
+.btn-sky{ background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.22);border-radius:50px; height:auto;width:auto;padding:13px 26px; font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:800; transition:background .2s ease; }
+.btn-sky:hover{background:rgba(255,255,255,.16);}
+
+/* NAVIGATION BUTTONS */
+.btn-next-page {
+  position: fixed; right: clamp(16px, 3vw, 32px); bottom: clamp(16px, 4vh, 32px);
+  background: linear-gradient(135deg, #4f46e5, #7c3aed); box-shadow: 0 4px 15px rgba(124,58,237,.4);
+  border: none; border-radius: 30px; padding: 12px 24px; color: #fff;
+  font-family: 'Nunito', sans-serif; font-size: clamp(.85rem, 1.5vw, 1rem); font-weight: 800;
+  cursor: pointer; z-index: 200; opacity: 0; pointer-events: none; transform: translateX(20px);
+  transition: all .5s cubic-bezier(.4,0,.2,1); display: flex; align-items: center; gap: 8px;
+}
+.btn-next-page.show { opacity: 1; pointer-events: all; transform: translateX(0); }
+.btn-next-page:hover { transform: translateX(5px) scale(1.05); box-shadow: 0 6px 22px rgba(124,58,237,.6); }
+
+.btn-prev-page {
+  position: fixed; left: clamp(16px, 3vw, 32px); bottom: clamp(16px, 4vh, 32px);
+  background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 30px;
+  padding: 12px 24px; color: #fff; font-family: 'Nunito', sans-serif; font-size: clamp(.85rem, 1.5vw, 1rem); font-weight: 800;
+  cursor: pointer; z-index: 200; opacity: 0; pointer-events: none; transform: translateX(-20px);
+  transition: all .5s cubic-bezier(.4,0,.2,1); display: flex; align-items: center; gap: 8px;
+}
+.btn-prev-page.show { opacity: 1; pointer-events: all; transform: translateX(0); }
+.btn-prev-page:hover { transform: translateX(-5px) scale(1.05); background: rgba(255,255,255,0.2); }
+.btn-prev-page span { display: inline-block; transform: rotate(180deg); }
+
+/* ══ TRANSITION OVERLAY ══ */
+.transition-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 1s ease, backdrop-filter 1s ease, background 1s ease;
+}
+.transition-overlay.solid-mode { background: #090314; }
+.transition-overlay.glass-mode { background: rgba(9, 3, 20, 0.3); backdrop-filter: blur(8px); }
+.transition-overlay.active { opacity: 1; pointer-events: all; }
+.trans-subtitle { color: var(--teal); font-size: clamp(.9rem, 2vw, 1.2rem); font-weight: 800; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 2px; opacity: 0; transform: translateY(20px); transition: all .8s ease .4s; }
+.transition-overlay.active .trans-subtitle { opacity: 1; transform: translateY(0); }
+.trans-title { font-size: clamp(2rem, 5vw, 4rem); font-weight: 900; color: #fff; text-shadow: 0 0 40px rgba(0, 229, 200, 0.5); opacity: 0; transform: translateY(20px); transition: all .8s ease .6s; text-align: center; }
+.transition-overlay.active .trans-title { opacity: 1; transform: translateY(0); }
+.btn-restart { margin-top: 40px; background: transparent; border: 2px solid rgba(255,255,255,0.3); color: #fff; padding: 10px 20px; border-radius: 20px; font-family: 'Nunito', sans-serif; font-weight: 700; cursor: pointer; opacity: 0; transition: all .8s ease 1s; display: none; }
+.btn-restart:hover { background: rgba(255,255,255,0.1); }
+.transition-overlay.active .btn-restart { opacity: 1; }
+
+/* ════════ CHAPTER 2: THE INVERSE SQUARE LAW ════════ */
+.ch2-inv-layout { position: relative; width: 100%; height: 100vh; max-width: 1000px; display: flex; flex-direction: column; align-items: center; padding: 6vh 20px 10vh 20px; }
+.ch2-inv-step { display: none; flex-direction: column; align-items: center; justify-content: flex-start; width: 100%; height: 100%; opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.ch2-inv-step.active { display: flex; opacity: 1; transform: translateY(0); }
+.ch2-title { font-size: clamp(1.6rem, 3.5vw, 2.2rem); font-weight: 900; color: var(--gold); margin-bottom: 10px; text-align: center; text-shadow: 0 4px 15px rgba(255,214,0,0.4); }
+.ch2-desc { font-size: clamp(1rem, 1.8vw, 1.15rem); color: #fff; text-align: center; max-width: 800px; margin-bottom: 20px; line-height: 1.5; }
+
+/* Sub 1: Sphere Visualizer */
+.inv-visual-container { display: flex; flex-direction: column; gap: 15px; align-items: center; width: 100%; max-width: 600px; margin-bottom: 20px; }
+.inv-side-view { width: 100%; height: 140px; background: rgba(0,0,0,0.4); border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); }
+.inv-side-svg { width: 100%; height: 100%; }
+.inv-star-orb { fill: var(--gold); filter: drop-shadow(0 0 10px var(--gold)); }
+.inv-beam { fill: rgba(255,214,0,0.15); transition: d 0.3s ease; }
+.inv-beam-lines { stroke: rgba(255,214,0,0.6); stroke-width: 2; transition: d 0.3s ease; stroke-dasharray: 5 5; }
+.inv-target-line { stroke: var(--pink); stroke-width: 4; transition: d 0.3s ease; }
+.inv-tick { stroke: rgba(255,255,255,0.3); stroke-width: 2; }
+.inv-tick-label { fill: #aaa; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: bold; text-anchor: middle; }
+
+.inv-front-view { width: 100%; display: flex; align-items: center; justify-content: center; height: 180px; background: rgba(0,0,0,0.2); border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
+.inv-grid { display: grid; gap: 2px; transition: all 0.3s ease; }
+.inv-cell { background: var(--gold); box-shadow: 0 0 8px var(--gold); transition: opacity 0.3s ease, transform 0.3s ease; border-radius: 2px; }
+
+.inv-controls { width: 100%; text-align: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; border: 1px dashed rgba(255,255,255,0.2); }
+.inv-readout { font-size: 1.4rem; font-weight: 900; color: var(--pink); margin-bottom: 10px; }
+.inv-readout span { color: #fff; font-size: 1.1rem; }
+input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin-bottom: 5px; }
+input[type=range]:focus { outline: none; }
+input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: linear-gradient(90deg, var(--gold), var(--teal), var(--pink)); border-radius: 4px; }
+input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: #fff; cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+.dist-labels { display: flex; justify-content: space-between; padding: 0 10px; color: #ccc; font-weight: 800; font-size: 0.9rem; }
+
+/* Sub 2: Quiz */
+.inv-q-container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 700px; }
+.inv-q-box { display: none; flex-direction: column; align-items: center; width: 100%; text-align: center; }
+.inv-q-box.active { display: flex; animation: fadeIn 0.5s ease; }
+.inv-q-text { font-size: 1.4rem; font-weight: 800; margin-bottom: 20px; line-height: 1.4; }
+.inv-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; justify-content: center; margin-bottom: 20px; width: 100%; max-width: 480px; margin-left: auto; margin-right: auto; }
+.btn-option { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 12px 25px; font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 800; color: #fff; cursor: pointer; transition: all 0.2s ease; width: 100%; }
+.btn-option:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+.btn-option.selected { background: var(--pink); border-color: #fff; box-shadow: 0 5px 20px rgba(255,77,158,0.5); }
+.btn-option.wrong { background: #EF476F; border-color: #fff; opacity: 0.8; }
+.inv-feedback { background: rgba(9,3,20,0.9); border: 2px solid var(--teal); border-radius: 15px; padding: 15px 25px; font-size: 1.1rem; color: #fff; max-width: 600px; text-align: center; margin-bottom: 20px; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; display: none; }
+.inv-feedback.show { display: block; opacity: 1; transform: translateY(0); }
+.inv-feedback b { color: var(--gold); font-size: 1.2rem; }
+
+/* Sub 3: Graph */
+.inv-graph-container { width: 100%; max-width: 800px; background: rgba(0,0,0,0.4); border-radius: 20px; padding: 15px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center; }
+.chart-wrapper { width: 100%; height: 280px; position: relative; margin-bottom: 15px; }
+.graph-controls { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: center; width: 100%; }
+.graph-guess-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; text-align: center; flex-grow: 1; min-width: 250px; }
+.toggle-box { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+
+/* ════════ CHAPTER 3: APPARENT MAGNITUDE (BULLETPROOF DRAG & DROP) ════════ */
+.ch3-layout { 
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
+  width: 100%; height: 100vh; max-width: 900px; padding: 2vh 0 10vh 0; 
+}
+.drag-sky { 
+  width: 100%; min-height: 200px; flex-grow: 1; margin-bottom: 10px; border-radius: 20px; 
+  background: #090314; 
+  border: 2px dashed rgba(255,255,255,0.15); 
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
+  position: relative; z-index: 5;
+}
+
+/* DRAG ELEMENTS - NO INLINE TRANSITIONS, HANDLED VIA CLASSES */
+.draggable-obj { 
+  position: absolute; width: 90px; height: 90px; cursor: grab; touch-action: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;
+}
+.draggable-obj.snapping { transition: left 0.3s ease-out, top 0.3s ease-out; }
+.draggable-obj.dragging { transition: none !important; cursor: grabbing !important; z-index: 100; transform: scale(1.1); }
+
+.star-body { border-radius: 50%; flex-shrink: 0; }
+.obj-moon .star-body { width: 75px; height: 75px; background: #fff; box-shadow: 0 0 20px #fff, 0 0 60px rgba(255,255,255,0.8), 0 0 120px rgba(255,255,255,0.4); position: relative; }
+.obj-moon .star-body::before, .obj-moon .star-body::after { content: ''; position: absolute; top: 50%; left: 50%; background: rgba(255, 255, 255, 0.5); transform: translate(-50%, -50%); border-radius: 50%; filter: blur(2px); }
+.obj-moon .star-body::before { width: 10px; height: 180px; } .obj-moon .star-body::after { width: 180px; height: 10px; }
+.obj-moon .star-body::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 30% 30%, transparent, rgba(200,200,200,0.4) 70%, #999); }
+
+.obj-sirius .star-body { width: 30px; height: 30px; background: #fff; box-shadow: 0 0 15px #fff, 0 0 30px #a0d2ff, 0 0 60px #4a90e2; position: relative; }
+.obj-sirius .star-body::before, .obj-sirius .star-body::after { content: ''; position: absolute; top: 50%; left: 50%; background: rgba(255, 255, 255, 0.9); transform: translate(-50%, -50%); border-radius: 50%; box-shadow: 0 0 10px rgba(160, 210, 255, 0.8); }
+.obj-sirius .star-body::before { width: 2px; height: 70px; } .obj-sirius .star-body::after { width: 70px; height: 2px; }
+
+.obj-vega .star-body { width: 20px; height: 20px; background: #fff; box-shadow: 0 0 10px #fff, 0 0 25px #88ccff; }
+.obj-polaris .star-body { width: 10px; height: 10px; background: #ffd0aa; box-shadow: 0 0 8px #ffb464; }
+.obj-faint .star-body { width: 4px; height: 4px; background: #bbb; box-shadow: 0 0 4px rgba(255,255,255,0.3); }
+
+.obj-name { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 6px; font-size: 0.9rem; font-weight: 900; color: #fff; white-space: nowrap; pointer-events: none; opacity: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.8); transition: opacity 0.3s ease; }
+.draggable-obj[data-slot-index]:not([data-slot-index="-1"]) .obj-name { opacity: 1; }
+
+.dropzone-container { width: 100%; padding: 0 10px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; margin-top: auto; margin-bottom: 50px; } 
+.dropzone-labels { display: flex; justify-content: space-between; width: 100%; font-weight: 900; font-size: clamp(0.8rem, 2vw, 1.1rem); color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;}
+.dropzone-slots { display: flex; justify-content: space-between; width: 100%; gap: 5px; }
+.slot-box { width: clamp(60px, 16vw, 90px); height: clamp(60px, 16vw, 90px); border: 2px dashed rgba(255,255,255,0.3); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: all 0.3s ease; }
+.slot-box.hovered { border-color: var(--teal); background: rgba(0,229,200,0.1); transform: scale(1.05); }
+.slot-box.error { border-color: #EF476F; background: rgba(239,71,111,0.1); animation: shake 0.4s ease; }
+.slot-box.correct { border-color: #06D6A0; background: rgba(6,214,160,0.1); }
+.mag-label { display: block; margin-top: 4px; font-size: clamp(1rem, 2.2vw, 1.3rem); font-weight: 900; color: #fff; opacity: 0; transform: translateY(-10px); transition: all 0.5s ease; white-space: nowrap; text-align: center; }
+.mag-label span.m-text { font-size: 0.9rem; color: #aaa; font-style: italic; margin-right: 3px;}
+
+/* ❗️ CHANGED THIS CSS RULE TO FIX THE MISSING M LABEL ❗️ */
+.draggable-obj.show-mag .mag-label { opacity: 1; transform: translateY(0); }
+
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } }
+.ch3-controls { display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 10; flex-shrink: 0; min-height: 80px; margin-top: 20px;}
+.insight-top-banner { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: rgba(9, 3, 20, 0.9); border: 2px solid rgba(0,229,200,.6); border-radius: 20px; padding: 20px 40px; font-size: clamp(1rem, 2vw, 1.4rem); font-weight: 900; color: #fff; text-align: center; opacity: 0; pointer-events: none; transition: opacity .6s ease, transform .6s ease; z-index: 50; white-space: nowrap; box-shadow: 0 15px 40px rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+.insight-top-banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.insight-top-banner span { color: var(--gold); }
+
+/* ════════ CHAPTER 4: ABSOLUTE MAGNITUDE ════════ */
+.ch4-scene { position: relative; z-index: 2; width: 100vw; height: 100vh; display: none; flex-direction: column; align-items: center; justify-content: center; padding-top: 4vh; opacity: 0; }
+.ch4-container { position: relative; width: 95vw; max-width: 1000px; aspect-ratio: 10 / 6; margin: 0 auto; }
+.ch4-svg-layer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+.ch4-ray { stroke: rgba(255,255,255,0.4); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 10 10; stroke-dashoffset: 1500; transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease; opacity: 0; }
+.ch4-ray.show { stroke-dashoffset: 0; opacity: 0.8; }
+.ch4-arc { stroke: #06D6A0; stroke-width: 3.5; stroke-dasharray: 12 12; fill: none; stroke-linecap: round; transition: opacity 1s ease; opacity: 0; }
+.ch4-arc.show { opacity: 1; }
+.ch4-earth { position: absolute; left: 10%; top: 91.66%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 1s ease; z-index: 5; pointer-events: none; }
+.ch4-earth.show { opacity: 1; }
+.ch4-arc-label { position: absolute; left: 35%; top: 38%; transform: translate(-50%, -50%); color: var(--teal); font-weight: 900; font-size: clamp(0.9rem, 1.8vw, 1.2rem); text-shadow: 0 4px 8px rgba(0,0,0,0.9); opacity: 0; transition: opacity 1s ease; z-index: 5; pointer-events: none; }
+.ch4-arc-label.show { opacity: 1; }
+.ch4-sc { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); transition: left 1.5s cubic-bezier(0.4, 0, 0.2, 1), top 1.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 1s ease; z-index: 10; touch-action: none; }
+.ch4-sc.draggable { cursor: grab; }
+.ch4-sc.dragging { transition: none !important; cursor: grabbing !important; z-index: 100; }
+.ch4-obj { border-radius: 50%; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1), height 1.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 1.2s ease, background 1.2s ease, opacity 1.2s ease; pointer-events: none; }
+.ch4-name { font-size: clamp(0.85rem, 1.5vw, 1rem); font-weight: 900; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); position: absolute; top: calc(100% + 5px); white-space: nowrap; transition: opacity 1s ease, color 1s ease; pointer-events: none; }
+.ch4-mag-label { font-size: 0.9rem; color: var(--gold); position: absolute; top: calc(100% + 25px); white-space: nowrap; font-weight: 800; opacity: 0; transition: opacity 1s ease; pointer-events: none; }
+.ch4-mag-label.show { opacity: 1; }
+.ch4-controls { margin-top: 30px; z-index: 100; flex-shrink: 0; display: flex; gap: 10px; }
+
+/* MISC Utilities */
+.toast-msg { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); background: rgba(239, 71, 111, 0.9); color: #fff; padding: 10px 20px; border-radius: 20px; font-weight: 800; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 200; }
+.toast-msg.show { opacity: 1; }
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+.success-flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 9999; }
+.success-flash.run { animation: flash 0.8s ease-out; }
+@keyframes flash { 0% { opacity: 0.8; } 100% { opacity: 0; } }
+</style>
+</head>
+<body>
+
+<div class="cockpit-frame" id="cockpit">
+  <div class="cockpit-hud">
+    <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
+    <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+  </div>
+</div>
+
+<div id="sparkles"></div>
+
+<!-- 1. HOME SCREEN -->
+<div class="home-screen" id="homeScreen">
+  <div class="home-bg" id="homeBg">
+    <div class="kz-planet kz-p1"></div><div class="kz-planet kz-p2"></div><div class="kz-planet kz-p3"></div>
+  </div>
+  <div class="home-ui-container" id="homeUI">
+    <div class="home-tag">Interactive Module</div>
+    <h1 class="home-title">STAR<br><span>BRIGHTNESS</span></h1>
+    <button class="btn-start" onclick="startGame()">▶ START GAME</button>
+  </div>
+</div>
+
+<!-- 2. CHAPTER 1 SCENE -->
+<div class="scene" id="mainScene">
+  <button class="btn-prev-page show" onclick="restartLesson()"><span>➔</span> Home</button>
+  <div class="q-row"><div class="q-text" id="qText">Which star is the brightest?</div></div>
+  <div class="universe" id="universe">
+    <div class="cosmo" id="cosmo">
+      <div class="ground"></div><div class="ddash d1"></div><div class="ddash d2"></div><div class="ddash d3"></div>
+      <div class="earth-dot"><div class="earth-ball"></div><div class="earth-lbl">🌍 Earth</div></div>
+      <div class="stars-row">
+        <div class="star-col sa"><div class="lbadge lp">Sirius</div>
+          <div class="pt" id="ptA">
+            <div class="spike spike-a" style="height:40px;transform:translateX(-50%) translateY(-100%) rotate(0deg)"></div><div class="spike spike-a" style="height:40px;transform:translateX(-50%) translateY(-100%) rotate(45deg)"></div><div class="spike spike-a" style="height:40px;transform:translateX(-50%) translateY(-100%) rotate(90deg)"></div><div class="spike spike-a" style="height:40px;transform:translateX(-50%) translateY(-100%) rotate(135deg)"></div><div class="spike spike-a" style="height:40px;transform:translateX(-50%) translateY(-100%) rotate(180deg)"></div><div class="spike spike-a" style="height:40px;transform:translateX(-50%) translateY(-100%) rotate(225deg)"></div><div class="spike spike-a" style="height:40px;transform:translateX(-50%) translateY(-100%) rotate(270deg)"></div><div class="spike spike-a" style="height:40px;transform:translateX(-50%) translateY(-100%) rotate(315deg)"></div>
+          </div>
+          <div class="dist-info"><div class="dist-pc" style="background:var(--pink)">2.6 pc</div><div class="dist-lbl">close</div></div>
+        </div>
+        <div class="star-col sb"><div class="lbadge lt">Canopus</div>
+          <div class="pt" id="ptB">
+            <div class="spike spike-b" style="height:85px;transform:translateX(-50%) translateY(-100%) rotate(0deg)"></div><div class="spike spike-b" style="height:85px;transform:translateX(-50%) translateY(-100%) rotate(45deg)"></div><div class="spike spike-b" style="height:85px;transform:translateX(-50%) translateY(-100%) rotate(90deg)"></div><div class="spike spike-b" style="height:85px;transform:translateX(-50%) translateY(-100%) rotate(135deg)"></div><div class="spike spike-b" style="height:85px;transform:translateX(-50%) translateY(-100%) rotate(180deg)"></div><div class="spike spike-b" style="height:85px;transform:translateX(-50%) translateY(-100%) rotate(225deg)"></div><div class="spike spike-b" style="height:85px;transform:translateX(-50%) translateY(-100%) rotate(270deg)"></div><div class="spike spike-b" style="height:85px;transform:translateX(-50%) translateY(-100%) rotate(315deg)"></div>
+          </div>
+          <div class="dist-info"><div class="dist-pc" style="background:#007a65">95 pc</div><div class="dist-lbl">medium</div></div>
+        </div>
+        <div class="star-col sc"><div class="lbadge ly">Deneb</div>
+          <div class="pt" id="ptC">
+            <div class="spike spike-c" style="height:14px;transform:translateX(-50%) translateY(-100%) rotate(0deg)"></div><div class="spike spike-c" style="height:14px;transform:translateX(-50%) translateY(-100%) rotate(90deg)"></div><div class="spike spike-c" style="height:14px;transform:translateX(-50%) translateY(-100%) rotate(180deg)"></div><div class="spike spike-c" style="height:14px;transform:translateX(-50%) translateY(-100%) rotate(270deg)"></div>
+          </div>
+          <div class="dist-info"><div class="dist-pc" style="background:#9e5c00">800 pc</div><div class="dist-lbl">very far</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="eq-stage" id="eqStage">
+      <div class="eq-ruler" id="eqRuler"><div class="eq-ruler-lbl">— equal distance from observer —</div></div>
+      <div class="eq-card" id="cardA"><div class="eq-orb oa" id="orbA"></div><div class="eq-name" style="background:var(--pink)">Sirius</div></div>
+      <div class="eq-card" id="cardB"><div class="eq-orb ob" id="orbB"></div><div class="eq-name" style="background:#009e88">Canopus</div></div>
+      <div class="eq-card" id="cardC">
+        <div class="eq-orb oc" id="orbC" style="position:relative;"><div class="surprise" id="surprise">✦ Most luminous!</div></div>
+        <div class="eq-name" style="background:#b07000">Deneb</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-banner" id="insight">
+    💡 &nbsp;Deneb looked <span style="color:#ffb347">dimmest</span> from Earth —
+    but is truly the <span style="color:#ff8855">most luminous</span> (200,000× the Sun)
+  </div>
+
+  <div class="btn-container">
+    <div class="btn-row active" id="rowS1"><button class="btn-c btn-cam" onclick="handleCam()">🔭</button></div>
+    <div class="btn-row" id="rowS2"><button class="btn-c btn-cmp" id="btnCmp" onclick="handleCmp()">⇄</button><button class="btn-c btn-sky" id="btnSky" onclick="handleSky()">↺ Sky View</button></div>
+    <div class="btn-row" id="rowS3"><button class="btn-c btn-cam" onclick="backToZoomed()">🔭</button><button class="btn-c btn-sky" onclick="handleSky()">↺ Sky View</button></div>
+  </div>
+  <button class="btn-next-page" id="btnNextCh2" onclick="goToCh2()">Next: The Inverse Square Law <span>➔</span></button>
+</div>
+
+<!-- 3. CHAPTER 2 SCENE (INVERSE SQUARE LAW) -->
+<div class="scene" id="ch2Scene">
+  <button class="btn-prev-page show" onclick="goBackToCh1()"><span>➔</span> Back</button>
+  <div class="ch2-inv-layout">
+    
+    <!-- Sub 1: Sphere Visualizer -->
+    <div class="ch2-inv-step active" id="ch2-inv-1">
+      <div class="ch2-title">Light Spreads Out 🔦</div>
+      <div class="ch2-desc">Before learning Magnitude, we must understand how light travels. As light moves further away, it must cover a larger area. <b>Move the slider to see!</b></div>
+      
+      <div class="inv-visual-container">
+        <div class="inv-side-view">
+          <svg class="inv-side-svg" viewBox="0 0 600 150" preserveAspectRatio="xMidYMid meet">
+            <line class="inv-tick" x1="130" y1="120" x2="130" y2="135"/><text class="inv-tick-label" x="130" y="148">1r</text>
+            <line class="inv-tick" x1="210" y1="120" x2="210" y2="135"/><text class="inv-tick-label" x="210" y="148">2r</text>
+            <line class="inv-tick" x1="290" y1="120" x2="290" y2="135"/><text class="inv-tick-label" x="290" y="148">3r</text>
+            <line class="inv-tick" x1="370" y1="120" x2="370" y2="135"/><text class="inv-tick-label" x="370" y="148">4r</text>
+            <line class="inv-tick" x1="450" y1="120" x2="450" y2="135"/><text class="inv-tick-label" x="450" y="148">5r</text>
+            
+            <polygon class="inv-beam" id="inv-beam-poly" points="50,75 130,55 130,95" />
+            <polyline class="inv-beam-lines" id="inv-beam-line1" points="50,75 130,55" />
+            <polyline class="inv-beam-lines" id="inv-beam-line2" points="50,75 130,95" />
+            <line class="inv-target-line" id="inv-target-l" x1="130" y1="55" x2="130" y2="95" />
+            <circle class="inv-star-orb" cx="50" cy="75" r="8" />
+          </svg>
+        </div>
+
+        <div class="inv-front-view">
+          <div class="inv-grid" id="inv-grid"></div>
+        </div>
+      </div>
+      
+      <div class="inv-controls">
+        <div class="inv-readout">Intensity = <span id="inv-intensity" style="color:var(--gold);">1 / 1</span> of original</div>
+        <div style="font-size: 0.9rem; color: #aaa; margin-bottom:15px;" id="inv-area-text">Area covered: 1 square</div>
+        <input type="range" id="inv-slider" min="1" max="5" value="1" oninput="updateInvVisuals()">
+        <div class="dist-labels"><span>1r</span><span>2r</span><span>3r</span><span>4r</span><span>5r</span></div>
+      </div>
+      
+      <button class="btn-check" style="margin-top:20px;" onclick="ch2GoToInvStep(2)">Test Your Knowledge</button>
+    </div>
+
+    <!-- Sub 2: Prediction Challenge Quiz -->
+    <div class="ch2-inv-step" id="ch2-inv-2">
+      <div class="ch2-title">Prediction Challenge 🧠</div>
+      <div class="ch2-desc">Let's see if you can apply the <b>Inverse Square Law (1/d²)</b>!</div>
+      
+      <div class="inv-q-container">
+        <!-- Q1 -->
+        <div class="inv-q-box active" id="inv-q1">
+          <h3 style="color:var(--pink); margin-bottom:10px;">Question 1</h3>
+          <div class="inv-q-text">If you move a spaceship <b>2x further away</b> from a star, what happens to the star's brightness?</div>
+          <div class="inv-options">
+            <button class="btn-option" onclick="ch2InvAnsQ(1, false, this)">1/2 as bright</button>
+            <button class="btn-option" onclick="ch2InvAnsQ(1, true, this)">1/4 as bright</button>
+            <button class="btn-option" onclick="ch2InvAnsQ(1, false, this)">1/8 as bright</button>
+            <button class="btn-option" onclick="ch2InvAnsQ(1, false, this)">1/16 as bright</button>
+          </div>
+          <div class="inv-feedback" id="inv-fb-1"><b>Correct!</b><br>Distance is 2. The light spreads over 2² = 4 squares. So intensity is <b>1/4</b>.</div>
+          <button class="btn-check" id="btn-ninv1" onclick="ch2NextInvQ(2)" style="display:none; margin-top:15px;">Next Question</button>
+        </div>
+
+        <!-- Q2 -->
+        <div class="inv-q-box" id="inv-q2">
+          <h3 style="color:var(--pink); margin-bottom:10px;">Question 2</h3>
+          <div class="inv-q-text">What if you move <b>3x further away</b>? How bright is it now?</div>
+          <div class="inv-options">
+            <button class="btn-option" onclick="ch2InvAnsQ(2, false, this)">1/3 as bright</button>
+            <button class="btn-option" onclick="ch2InvAnsQ(2, false, this)">1/6 as bright</button>
+            <button class="btn-option" onclick="ch2InvAnsQ(2, true, this)">1/9 as bright</button>
+            <button class="btn-option" onclick="ch2InvAnsQ(2, false, this)">1/27 as bright</button>
+          </div>
+          <div class="inv-feedback" id="inv-fb-2"><b>Exactly!</b><br>Distance is 3. Area = 3² = 9. Intensity drops to <b>1/9</b>.</div>
+          <button class="btn-check" id="btn-ninv2" onclick="ch2NextInvQ(3)" style="display:none; margin-top:15px;">Next Question</button>
+        </div>
+
+        <!-- Q3 -->
+        <div class="inv-q-box" id="inv-q3">
+          <h3 style="color:var(--pink); margin-bottom:10px;">Final Challenge</h3>
+          <div class="inv-q-text">Star A is <b>10 pc</b> away. Star B is <b>30 pc</b> away. Both have the <i>exact same true brightness</i>. Which appears brighter to us, and by how much?</div>
+          <div class="inv-options">
+            <button class="btn-option" onclick="ch2InvAnsQ(3, false, this)">A is 3x brighter</button>
+            <button class="btn-option" onclick="ch2InvAnsQ(3, true, this)">A is 9x brighter</button>
+            <button class="btn-option" onclick="ch2InvAnsQ(3, false, this)">B is 3x brighter</button>
+            <button class="btn-option" onclick="ch2InvAnsQ(3, false, this)">B is 9x brighter</button>
+          </div>
+          <div class="inv-feedback" id="inv-fb-3"><b>Brilliant!</b><br>Star B is 3 times further away than Star A. Because of the Inverse Square Law (3² = 9), Star A appears <b>9 times brighter</b> than B!</div>
+          <button class="btn-check" id="btn-ninv3" onclick="ch2GoToInvStep(3)" style="display:none; margin-top:15px;">Explore the Math</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub 3: Interactive Graph -->
+    <div class="ch2-inv-step" id="ch2-inv-3">
+      <div class="ch2-title">The Mathematics 📈</div>
+      <div class="ch2-desc">Let's plot Intensity vs Distance. <b>Guess the intensity</b> by adjusting the slider before revealing the true curve!</div>
+      
+      <div class="inv-graph-container">
+        <div class="graph-controls">
+          <div class="graph-guess-box">
+            <div style="font-size: 1.1rem; font-weight: 800; margin-bottom: 10px;">Select Distance (d): <span id="lbl-d" style="color:var(--teal)">2</span></div>
+            <input type="range" id="guess-d" min="1" max="10" step="0.5" value="2" oninput="updateGuessPoint()">
+            
+            <div style="font-size: 1.1rem; font-weight: 800; margin-top: 15px; margin-bottom: 10px;">Guess Intensity (I): <span id="lbl-i" style="color:var(--pink)">0.50</span></div>
+            <input type="range" id="guess-i" min="0.01" max="1" step="0.01" value="0.50" oninput="updateGuessPoint()">
+            
+            <button class="btn-check" id="btnRevealCurve" style="margin-top:20px; font-size:1rem; padding: 8px 20px;" onclick="revealChartCurve()">Check Answer & Reveal Curve</button>
+          </div>
+
+          <div class="toggle-box">
+             <button class="btn-check" style="background: rgba(255,255,255,0.1); border: 2px solid var(--gold); box-shadow:none;" onclick="toggleChartScale()">Toggle Linear / Log Scale</button>
+             <div id="logEqText" style="display:none; color:var(--gold); font-weight:900; font-size:1.1rem; margin-top:10px;">log I = -2 log d + C</div>
+          </div>
+        </div>
+
+        <div class="chart-wrapper">
+          <canvas id="invChart"></canvas>
+        </div>
+      </div>
+      
+      <button class="btn-next-page" id="btnNextCh3" onclick="goToCh3()" style="position:relative; right:0; bottom:0; margin-top:30px;">Next: Apparent Magnitude <span>➔</span></button>
+    </div>
+
+  </div>
+</div>
+
+<!-- 4. CHAPTER 3 SCENE (DRAG & DROP) -->
+<div class="scene" id="ch3Scene">
+  <button class="btn-prev-page show" onclick="goBackToCh2()"><span>➔</span> Back</button>
+  <div class="insight-top-banner" id="ch3Insight">
+    A <span style="color:var(--pink)">Lower or Negative (m)</span> means the object appears <span style="color:var(--gold)">Brighter!</span>
+  </div>
+
+  <div class="ch3-layout" id="ch3Layout">
+    <div class="q-row"><div class="q-text">Drag objects to sort by Brightness!</div></div>
+    
+    <div class="drag-sky" id="dragSky"></div>
+
+    <div class="draggable-obj obj-moon" id="obj-moon" data-val="1">
+      <div class="star-body"></div><div class="obj-name">Moon<div class="mag-label"><span class="m-text">m = </span>-12.7</div></div>
+    </div>
+    <div class="draggable-obj obj-sirius" id="obj-sirius" data-val="2">
+      <div class="star-body"></div><div class="obj-name">Sirius<div class="mag-label"><span class="m-text">m = </span>-1.46</div></div>
+    </div>
+    <div class="draggable-obj obj-vega" id="obj-vega" data-val="3">
+      <div class="star-body"></div><div class="obj-name">Vega<div class="mag-label"><span class="m-text">m = </span>0.0</div></div>
+    </div>
+    <div class="draggable-obj obj-polaris" id="obj-polaris" data-val="4">
+      <div class="star-body"></div><div class="obj-name">Polaris<div class="mag-label"><span class="m-text">m = </span>2.0</div></div>
+    </div>
+    <div class="draggable-obj obj-faint" id="obj-faint" data-val="5">
+      <div class="star-body"></div><div class="obj-name">Faint Star<div class="mag-label"><span class="m-text">m = </span>6.0</div></div>
+    </div>
+
+    <div class="dropzone-container">
+      <div class="dropzone-labels"><span>🔆 Brightest</span><span>Dimmest 🌑</span></div>
+      <div class="dropzone-slots" id="slotsContainer">
+        <div class="slot-box" data-slot="0"></div>
+        <div class="slot-box" data-slot="1"></div>
+        <div class="slot-box" data-slot="2"></div>
+        <div class="slot-box" data-slot="3"></div>
+        <div class="slot-box" data-slot="4"></div>
+      </div>
+    </div>
+
+    <div class="ch3-controls">
+      <button class="btn-check" id="btnCheck" onclick="checkAnswer()" disabled>Check Answer</button>
+    </div>
+  </div>
+
+  <button class="btn-next-page" id="btnNextCh4" onclick="goToCh4()">Next: Absolute Brightness <span>➔</span></button>
+</div>
+
+<!-- 5. CHAPTER 4 SCENE (INTERACTIVE SANDBOX) -->
+<div class="scene ch4-scene" id="ch4Scene">
+  <button class="btn-prev-page show" onclick="goBackToCh3()"><span>➔</span> Back</button>
+  <div class="q-row"><div class="q-text" id="ch4Prompt">Comparing Apparent (m) vs Absolute (M) Brightness from Earth.</div></div>
+  
+  <div class="ch4-container" id="ch4Container">
+    <svg class="ch4-svg-layer" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
+      <line class="ch4-ray" id="ray-moon" />
+      <line class="ch4-ray" id="ray-sirius" />
+      <line class="ch4-ray" id="ray-vega" />
+      <line class="ch4-ray" id="ray-polaris" />
+      <line class="ch4-ray" id="ray-faint" />
+      <path class="ch4-arc" id="arc-10pc" d="M 498 515 A 400 400 0 0 0 250 178" />
+    </svg>
+
+    <div id="ch4Earth" class="ch4-earth">
+      <div class="earth-ball" style="width:25px; height:25px;"></div>
+      <div style="font-size: 0.8rem; margin-top:5px; font-weight:bold; color:var(--teal);">🌍 Earth</div>
+    </div>
+
+    <div id="ch4ArcLabel" class="ch4-arc-label">10 Parsecs (32.6 LY)</div>
+
+    <div class="ch4-sc" id="ch4-sc-moon" data-star-id="moon">
+      <div class="ch4-obj" id="ch4-obj-moon"></div>
+      <div class="ch4-name">Moon</div>
+      <div class="ch4-mag-label" id="ch4-mag-moon"></div>
+    </div>
+    
+    <div class="ch4-sc" id="ch4-sc-sirius" data-star-id="sirius">
+      <div class="ch4-obj" id="ch4-obj-sirius"></div>
+      <div class="ch4-name">Sirius</div>
+      <div class="ch4-mag-label" id="ch4-mag-sirius"></div>
+    </div>
+
+    <div class="ch4-sc" id="ch4-sc-vega" data-star-id="vega">
+      <div class="ch4-obj" id="ch4-obj-vega"></div>
+      <div class="ch4-name">Vega</div>
+      <div class="ch4-mag-label" id="ch4-mag-vega"></div>
+    </div>
+
+    <div class="ch4-sc" id="ch4-sc-polaris" data-star-id="polaris">
+      <div class="ch4-obj" id="ch4-obj-polaris"></div>
+      <div class="ch4-name">Polaris</div>
+      <div class="ch4-mag-label" id="ch4-mag-polaris"></div>
+    </div>
+
+    <div class="ch4-sc" id="ch4-sc-faint" data-star-id="faint">
+      <div class="ch4-obj" id="ch4-obj-faint"></div>
+      <div class="ch4-name">Faint Star</div>
+      <div class="ch4-mag-label" id="ch4-mag-faint"></div>
+    </div>
+  </div>
+
+  <div class="ch4-controls">
+    <button class="btn-check" id="btnCh4Camera" onclick="toggleCh4Camera()">Zoom Out 🔭</button>
+    <button class="btn-sky" id="btnCh4Align" onclick="alignAll10pc()" style="display:none;">Align All to 10 pc ⬇️</button>
+    <button class="btn-sky" id="btnCh4Reset" onclick="resetAllTrueDist()" style="display:none;">Reset Position ↺</button>
+  </div>
+  
+  <button class="btn-next-page" id="btnFinish" onclick="restartLesson()" style="display:none; opacity:0; margin-top:20px;">Finish Module <span>↺</span></button>
+</div>
+
+<!-- TRANSITION OVERLAY & MISC -->
+<div class="transition-overlay" id="transOverlay">
+  <div class="trans-subtitle" id="transSub">Chapter 1</div>
+  <div class="trans-title" id="transTitle">Apparent vs True Brightness</div>
+  <button class="btn-restart" id="transBtn" onclick="restartLesson()">↺ Return to Base</button>
+</div>
+
+<div class="toast-msg" id="toastMsg"></div>
+<div class="success-flash" id="successFlash"></div>
+
+<script>
+/* ════════ INITIALIZATION (ONE SCRIPT TAG ONLY) ════════ */
+(()=>{
+  const sc=document.getElementById('sparkles');
+  if(!sc) return;
+  [{x:3,y:6,s:12,d:2.1},{x:10,y:18,s:8,d:3.3},{x:20,y:4,s:15,d:1.9},{x:32,y:13,s:10,d:2.8},
+   {x:46,y:3,s:12,d:3.0},{x:56,y:20,s:8,d:2.5},{x:63,y:6,s:14,d:2.0},{x:73,y:16,s:9,d:3.2},
+   {x:83,y:5,s:11,d:2.3},{x:90,y:12,s:10,d:2.7},{x:16,y:85,s:14,d:3.1},{x:28,y:78,s:8,d:2.5},
+   {x:40,y:88,s:16,d:1.8},{x:53,y:80,s:10,d:3.4},{x:66,y:86,s:12,d:2.1},{x:78,y:76,s:9,d:2.7},
+   {x:88,y:83,s:15,d:3.3},{x:6,y:48,s:11,d:3.0},{x:93,y:43,s:14,d:1.7},{x:48,y:48,s:9,d:3.5},
+   {x:1,y:29,s:13,d:2.4},{x:96,y:64,s:10,d:2.9},{x:49,y:27,s:8,d:3.6},{x:24,y:54,s:11,d:2.2},
+   {x:13,y:35,s:18,d:4.1},{x:38,y:60,s:16,d:3.9},{x:68,y:40,s:20,d:4.3},
+   {x:86,y:62,s:17,d:3.8},{x:23,y:72,s:19,d:4.6},{x:58,y:70,s:18,d:4.0},
+   {x:72,y:24,s:16,d:3.7},{x:34,y:39,s:17,d:4.2},{x:81,y:31,s:14,d:3.5},
+   {x:5,y:61,s:15,d:4.4}
+  ].forEach((p,i)=>{
+    const el=document.createElement('div');
+    el.className='sp';
+    el.style.cssText=`left:${p.x}%;top:${p.y}%;width:${p.s}px;height:${p.s}px;`
+      +`animation-duration:${p.d}s;animation-delay:${(i*.19)%3}s;`;
+    sc.appendChild(el);
+  });
+})();
+
+// Global DOM
+const cockpit = document.getElementById('cockpit');
+const sparkles = document.getElementById('sparkles');
+const homeBg = document.getElementById('homeBg');
+const homeUI = document.getElementById('homeUI');
+const homeScreen = document.getElementById('homeScreen');
+
+const mainScene = document.getElementById('mainScene');
+const ch2Scene = document.getElementById('ch2Scene');
+const ch3Scene = document.getElementById('ch3Scene');
+const ch4Scene = document.getElementById('ch4Scene');
+
+const transOverlay = document.getElementById('transOverlay');
+const transSub = document.getElementById('transSub');
+const transTitle = document.getElementById('transTitle');
+const transBtn = document.getElementById('transBtn');
+
+let state = 0;
+
+/* ─── SYSTEM: TRANSITIONS ─── */
+function startGame() {
+  homeUI.style.opacity = '0'; homeUI.style.transform = 'scale(0.8)';
+  cockpit.style.transition = 'transform 3.5s cubic-bezier(0.5, 0, 0.2, 1), opacity 2.5s ease 0.5s';
+  cockpit.style.transform = 'scale(3)'; cockpit.style.opacity = '0';
+  homeBg.style.transition = 'transform 3.5s cubic-bezier(0.5, 0, 0.2, 1), opacity 2s ease 1s';
+  homeBg.style.transform = 'scale(4)'; homeBg.style.opacity = '0';
+  sparkles.style.transition = 'transform 2.5s cubic-bezier(0.4, 0, 0.2, 1)';
+  sparkles.style.transform = 'scale(2.5)';
+
+  transSub.textContent = 'Chapter 1';
+  transTitle.textContent = 'Apparent vs True Brightness';
+  transBtn.style.display = 'none'; 
+  
+  transOverlay.classList.remove('solid-mode'); transOverlay.classList.add('glass-mode'); transOverlay.classList.add('active');
+
+  setTimeout(() => {
+    homeScreen.style.display = 'none'; mainScene.style.display = 'flex'; mainScene.style.transform = 'scale(0.7)';
+    setTimeout(() => {
+      mainScene.style.transition = 'opacity 1.5s ease, transform 2s cubic-bezier(0.2, 0.8, 0.2, 1)';
+      mainScene.style.opacity = '1'; mainScene.style.transform = 'scale(1)';
+      sparkles.style.transition = 'transform 2.5s ease-out'; sparkles.style.transform = 'scale(1)';
+    }, 50);
+  }, 1200);
+
+  setTimeout(() => { transOverlay.classList.remove('active'); }, 3200);
+}
+
+function goToCh2(){
+  transSub.textContent = 'Chapter 2';
+  transTitle.textContent = 'Inverse Square Law';
+  transBtn.style.display = 'none';
+  transOverlay.classList.remove('glass-mode'); transOverlay.classList.add('solid-mode'); transOverlay.classList.add('active');
+
+  setTimeout(() => {
+    mainScene.style.display = 'none';
+    ch2Scene.style.display = 'flex';
+    initCh2Inv();
+    setTimeout(() => { ch2Scene.style.opacity = '1'; }, 50);
+  }, 800);
+  setTimeout(() => { transOverlay.classList.remove('active'); }, 2000);
+}
+
+function goToCh3(){
+  transSub.textContent = 'Chapter 3';
+  transTitle.textContent = 'Apparent Magnitude';
+  transBtn.style.display = 'none';
+  transOverlay.classList.remove('glass-mode'); transOverlay.classList.add('solid-mode'); transOverlay.classList.add('active');
+
+  setTimeout(() => {
+    ch2Scene.style.display = 'none';
+    ch3Scene.style.display = 'flex';
+    initCh3DragDrop(); 
+    setTimeout(() => { ch3Scene.style.opacity = '1'; }, 50);
+  }, 800);
+  setTimeout(() => { transOverlay.classList.remove('active'); }, 2000);
+}
+
+function goToCh4(){
+  transSub.textContent = 'Chapter 4';
+  transTitle.textContent = 'Absolute Magnitude';
+  transBtn.style.display = 'none';
+  transOverlay.classList.remove('glass-mode'); transOverlay.classList.add('solid-mode'); transOverlay.classList.add('active');
+
+  setTimeout(() => {
+    ch3Scene.style.display = 'none';
+    ch4Scene.style.display = 'flex';
+    initCh4();
+    setTimeout(() => { ch4Scene.style.opacity = '1'; }, 50);
+  }, 800);
+  setTimeout(() => { transOverlay.classList.remove('active'); }, 2000);
+}
+
+function goBackToCh1(){
+  transSub.textContent = 'Chapter 1';
+  transTitle.textContent = 'Apparent vs True Brightness';
+  transBtn.style.display = 'none';
+  transOverlay.classList.remove('glass-mode'); transOverlay.classList.add('solid-mode'); transOverlay.classList.add('active');
+
+  setTimeout(() => {
+    ch2Scene.style.display = 'none';
+    mainScene.style.display = 'flex';
+    setTimeout(() => { mainScene.style.opacity = '1'; }, 50);
+  }, 800);
+  setTimeout(() => { transOverlay.classList.remove('active'); }, 2000);
+}
+
+function goBackToCh2(){
+  transSub.textContent = 'Chapter 2';
+  transTitle.textContent = 'Inverse Square Law';
+  transBtn.style.display = 'none';
+  transOverlay.classList.remove('glass-mode'); transOverlay.classList.add('solid-mode'); transOverlay.classList.add('active');
+
+  setTimeout(() => {
+    ch3Scene.style.display = 'none';
+    ch2Scene.style.display = 'flex';
+    setTimeout(() => { ch2Scene.style.opacity = '1'; }, 50);
+  }, 800);
+  setTimeout(() => { transOverlay.classList.remove('active'); }, 2000);
+}
+
+function goBackToCh3(){
+  transSub.textContent = 'Chapter 3';
+  transTitle.textContent = 'Apparent Magnitude';
+  transBtn.style.display = 'none';
+  transOverlay.classList.remove('glass-mode'); transOverlay.classList.add('solid-mode'); transOverlay.classList.add('active');
+
+  setTimeout(() => {
+    ch4Scene.style.display = 'none';
+    ch3Scene.style.display = 'flex';
+    setTimeout(() => { ch3Scene.style.opacity = '1'; }, 50);
+  }, 800);
+  setTimeout(() => { transOverlay.classList.remove('active'); }, 2000);
+}
+
+function restartLesson(){
+  transSub.textContent = 'System Reset'; transTitle.textContent = 'Returning to Base...'; transBtn.style.display = 'none';
+  transOverlay.classList.remove('glass-mode'); transOverlay.classList.add('solid-mode'); transOverlay.classList.add('active');
+
+  setTimeout(() => {
+    mainScene.style.opacity = '0'; ch2Scene.style.opacity = '0'; ch3Scene.style.opacity = '0'; ch4Scene.style.opacity = '0';
+    if(document.getElementById('ch3Insight')) document.getElementById('ch3Insight').classList.remove('show');
+    setTimeout(() => {
+      mainScene.style.display = 'none'; ch2Scene.style.display = 'none'; ch3Scene.style.display = 'none'; ch4Scene.style.display = 'none';
+      homeScreen.style.display = 'flex';
+      homeUI.style.opacity = '1'; homeUI.style.transform = 'scale(1)';
+      cockpit.style.transition = 'none'; cockpit.style.transform = 'scale(1)'; cockpit.style.opacity = '1';
+      homeBg.style.transition = 'none'; homeBg.style.transform = 'scale(1)'; homeBg.style.opacity = '1';
+      handleSky(); 
+      document.getElementById('btnNextCh2').classList.remove('show');
+    }, 500);
+  }, 800);
+  setTimeout(() => { transOverlay.classList.remove('active'); }, 2000);
+}
+
+function showToast(msg) {
+  const toastMsg = document.getElementById('toastMsg');
+  if(!toastMsg) return;
+  toastMsg.innerText = msg;
+  toastMsg.classList.add('show');
+  setTimeout(() => toastMsg.classList.remove('show'), 2000);
+}
+
+/* ════════ CHAPTER 1 LOGIC ════════ */
+const eqRuler = document.getElementById('eqRuler');
+const insight = document.getElementById('insight');
+const rowS1 = document.getElementById('rowS1'), rowS2 = document.getElementById('rowS2'), rowS3 = document.getElementById('rowS3');
+const qText = document.getElementById('qText');
+const cardA=document.getElementById('cardA'), orbA=document.getElementById('orbA');
+const cardB=document.getElementById('cardB'), orbB=document.getElementById('orbB');
+const cardC=document.getElementById('cardC'), orbC=document.getElementById('orbC');
+const surprise=document.getElementById('surprise');
+const btnNextCh2 = document.getElementById('btnNextCh2');
+let hasSeenCh1All = false;
+
+function showRow(n){ rowS1.classList.toggle('active', n===1); rowS2.classList.toggle('active', n===2); rowS3.classList.toggle('active', n===3); }
+function updateTextSmoothly(msg, color, shadow){
+  qText.style.opacity = '0';
+  setTimeout(() => { qText.textContent = msg; qText.style.color = color || '#fff'; qText.style.textShadow = shadow || 'none'; qText.style.opacity = '1'; }, 350);
+}
+
+function handleCam(){
+  if(state !== 0) return; state = 1;
+  document.getElementById('cosmo').classList.add('zoomed'); showRow(0); 
+  setTimeout(()=>{ showRow(2); }, 1200);
+  setTimeout(()=>{ updateTextSmoothly('Different distances... Which star is truly the brightest?', 'var(--teal)', '0 0 28px rgba(0,229,200,.6)'); }, 600);
+}
+
+function handleCmp(){
+  if(state !== 1) return; state = 2; showRow(0); 
+  const universe = document.getElementById('universe');
+  const uR = universe.getBoundingClientRect();
+  const origins = [ document.getElementById('ptA').getBoundingClientRect(), document.getElementById('ptB').getBoundingClientRect(), document.getElementById('ptC').getBoundingClientRect() ];
+  const W=uR.width, H=uR.height;
+  const sA = Math.min(Math.round(W*0.085), 95), sB = Math.min(Math.round(W*0.125), 148), sC = Math.min(Math.round(W*0.21), 242);
+  const pad = W*0.05, zone = (W - pad*2) / 3, RULER = H - 36, BADGE = 46;              
+  const targets = [
+    { card:cardA, orb:orbA, s:sA, x: pad + zone*0 + zone/2 - sA/2, y: RULER - sA - BADGE },
+    { card:cardB, orb:orbB, s:sB, x: pad + zone*1 + zone/2 - sB/2, y: RULER - sB - BADGE },
+    { card:cardC, orb:orbC, s:sC, x: pad + zone*2 + zone/2 - sC/2, y: RULER - sC - BADGE },
+  ];
+
+  targets.forEach(({card, orb, s}, i) => {
+    const r = origins[i], actualSize = r.width; 
+    const cx = r.left - uR.left + r.width/2 - actualSize/2, cy = r.top - uR.top + r.height/2 - actualSize/2;
+    card.style.cssText = `left:${cx}px;top:${cy}px;transition:none;opacity:1;`;
+    orb.style.cssText  = `width:${actualSize}px;height:${actualSize}px;transition:none;`; card.classList.add('ready');
+  });
+
+  document.getElementById('cosmo').classList.add('fadeout');
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
+    const TR = '1.35s cubic-bezier(.4,0,.2,1)';
+    targets.forEach(({card, orb, s, x, y})=>{
+      card.style.transition = `left ${TR}, top ${TR}, opacity .35s ease`; card.style.left = x+'px'; card.style.top = y+'px';
+      orb.style.transition  = `width ${TR}, height ${TR}, box-shadow ${TR}`; orb.style.width = s+'px'; orb.style.height = s+'px';
+    });
+    setTimeout(()=>{
+      eqRuler.classList.add('show'); insight.classList.add('show'); surprise.classList.add('pop');
+      updateTextSmoothly('True luminosity at equal distance!', 'var(--gold)', '0 0 28px rgba(255,214,0,.6)');
+      showRow(3);
+      if(!hasSeenCh1All) { hasSeenCh1All = true; btnNextCh2.classList.add('show'); }
+    }, 1300);
+  }); });
+}
+
+function backToZoomed(){
+  if(state !== 2) return; state = 1; showRow(0);
+  eqRuler.classList.remove('show'); insight.classList.remove('show'); surprise.classList.remove('pop'); surprise.style.opacity='0';
+  const uR = document.getElementById('universe').getBoundingClientRect();
+  const origins = [ document.getElementById('ptA').getBoundingClientRect(), document.getElementById('ptB').getBoundingClientRect(), document.getElementById('ptC').getBoundingClientRect() ];
+  const targets = [{card:cardA, orb:orbA}, {card:cardB, orb:orbB}, {card:cardC, orb:orbC}];
+
+  requestAnimationFrame(() => {
+    const TR = '1.2s cubic-bezier(.4,0,.2,1)';
+    targets.forEach(({card, orb}, i) => {
+      const r = origins[i], targetSize = r.width;
+      const cx = r.left - uR.left + r.width/2 - targetSize/2, cy = r.top - uR.top + r.height/2 - targetSize/2;
+      card.style.transition = `left ${TR}, top ${TR}, opacity .8s ease .4s`; card.style.left = cx + 'px'; card.style.top = cy + 'px'; card.style.opacity = '0'; 
+      orb.style.transition = `width ${TR}, height ${TR}, box-shadow ${TR}`; orb.style.width = targetSize + 'px'; orb.style.height = targetSize + 'px'; card.style.pointerEvents = 'none';
+    });
+  });
+
+  document.getElementById('cosmo').classList.remove('fadeout'); updateTextSmoothly('Different distances... Which star is truly the brightest?', 'var(--teal)', '0 0 28px rgba(0,229,200,.6)');
+  setTimeout(()=>{ 
+    if(state !== 1) return;
+    [cardA,cardB,cardC].forEach(c=>{c.style.cssText='';c.classList.remove('ready');}); [orbA,orbB,orbC].forEach(o=>{o.style.cssText='';});
+    surprise.style.opacity=''; showRow(2);
+  }, 1250);
+}
+
+function handleSky(){
+  const wasState2 = (state === 2); state = 0; showRow(1); document.getElementById('cosmo').classList.remove('zoomed','fadeout');
+  eqRuler.classList.remove('show'); insight.classList.remove('show'); surprise.classList.remove('pop'); surprise.style.opacity='0';
+  if (wasState2) { [cardA,cardB,cardC].forEach(c=>{ c.style.transition = 'opacity .5s ease'; c.style.opacity = '0'; c.style.pointerEvents = 'none'; }); }
+  updateTextSmoothly('Which star is the brightest?', '#fff', '');
+  setTimeout(()=>{ 
+    [cardA,cardB,cardC].forEach(c=>{c.style.cssText='';c.classList.remove('ready');}); [orbA,orbB,orbC].forEach(o=>{o.style.cssText='';}); surprise.style.opacity=''; 
+  }, wasState2 ? 600 : 50);
+}
+
+
+/* ════════ CHAPTER 2: INVERSE SQUARE LAW ════════ */
+let invChartInstance = null;
+let invChartIsLog = false;
+
+function initCh2Inv() {
+  document.getElementById('btnNextCh3').classList.remove('show');
+  ch2GoToInvStep(1);
+  updateInvVisuals();
+}
+
+function ch2GoToInvStep(step) {
+  document.querySelectorAll('.ch2-inv-step').forEach(el => el.classList.remove('active'));
+  document.getElementById('ch2-inv-' + step).classList.add('active');
+
+  if(step === 3 && !invChartInstance) {
+    setTimeout(initInvChart, 300);
+  }
+}
+
+function updateInvVisuals() {
+  const d = parseInt(document.getElementById('inv-slider').value);
+  
+  // Update Side View SVG
+  const starX = 50; const starY = 75;
+  const targetX = starX + (d * 80);
+  const targetYHeight = d * 10;
+  
+  document.getElementById('inv-beam-poly').setAttribute('points', `${starX},${starY} ${targetX},${starY-targetYHeight} ${targetX},${starY+targetYHeight}`);
+  document.getElementById('inv-beam-line1').setAttribute('points', `${starX},${starY} ${targetX},${starY-targetYHeight}`);
+  document.getElementById('inv-beam-line2').setAttribute('points', `${starX},${starY} ${targetX},${starY+targetYHeight}`);
+  document.getElementById('inv-target-l').setAttribute('x1', targetX);
+  document.getElementById('inv-target-l').setAttribute('x2', targetX);
+  document.getElementById('inv-target-l').setAttribute('y1', starY-targetYHeight);
+  document.getElementById('inv-target-l').setAttribute('y2', starY+targetYHeight);
+  
+  // Update Front View Grid
+  const grid = document.getElementById('inv-grid');
+  grid.style.gridTemplateColumns = `repeat(${d}, 25px)`;
+  grid.style.gridTemplateRows = `repeat(${d}, 25px)`;
+  
+  grid.innerHTML = '';
+  const numCells = d * d;
+  const opacity = 1 / numCells;
+  
+  for(let i=0; i<numCells; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'inv-cell';
+    cell.style.opacity = Math.max(0.02, opacity);
+    grid.appendChild(cell);
+  }
+  
+  document.getElementById('inv-intensity').innerHTML = `1 / ${numCells}`;
+  document.getElementById('inv-area-text').innerHTML = `Area covered: ${numCells} square${numCells > 1 ? 's' : ''}`;
+}
+
+function ch2InvAnsQ(qNum, isCorrect, btn) {
+  const container = document.getElementById('inv-q' + qNum);
+  container.querySelectorAll('.btn-option').forEach(b => { b.classList.remove('selected', 'wrong'); });
+  const fb = document.getElementById('inv-fb-' + qNum);
+  
+  if (isCorrect) {
+    btn.classList.add('selected');
+    fb.classList.add('show');
+    document.getElementById('btn-ninv' + qNum).style.display = 'block';
+    document.getElementById('successFlash').classList.add('run');
+    setTimeout(() => document.getElementById('successFlash').classList.remove('run'), 500);
+  } else {
+    btn.classList.add('wrong');
+    fb.classList.remove('show');
+    document.getElementById('btn-ninv' + qNum).style.display = 'none';
+  }
+}
+
+function ch2NextInvQ(qNum) {
+  document.getElementById('inv-q' + (qNum-1)).classList.remove('active');
+  document.getElementById('inv-q' + qNum).classList.add('active');
+}
+
+function initInvChart() {
+  const canvas = document.getElementById('invChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const trueData = [];
+  for(let d=1; d<=10; d+=0.1) trueData.push({x: d, y: 1 / Math.pow(d, 2)});
+
+  invChartInstance = new Chart(ctx, {
+      data: {
+          datasets: [{
+              type: 'line', label: 'True Intensity (I = 1/d²)', data: trueData,
+              borderColor: '#00e5c8', borderWidth: 3, pointRadius: 0, fill: false, hidden: true
+          }, {
+              type: 'scatter', label: 'Your Guess', data: [{x: 2, y: 0.5}],
+              backgroundColor: '#ff4d9e', pointRadius: 8, pointHoverRadius: 10, pointBorderColor: '#fff', pointBorderWidth: 2
+          }]
+      },
+      options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: {
+              x: { type: 'linear', min: 1, max: 10, title: { display: true, text: 'Distance (d)', color: '#fff', font:{size: 14, weight: 'bold'} }, ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+              y: { type: 'linear', min: 0, max: 1.0, title: { display: true, text: 'Intensity (I)', color: '#fff', font:{size: 14, weight: 'bold'} }, ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+          },
+          plugins: { 
+              legend: { labels: { color: '#fff', font:{size:14, weight:'bold'} } },
+              tooltip: { callbacks: { label: (ctx) => `(${ctx.parsed.x.toFixed(1)}, ${ctx.parsed.y.toFixed(3)})` } }
+          }
+      }
+  });
+}
+
+function updateGuessPoint() {
+  const d = parseFloat(document.getElementById('guess-d').value);
+  const i = parseFloat(document.getElementById('guess-i').value);
+  document.getElementById('lbl-d').innerText = d.toFixed(1);
+  document.getElementById('lbl-i').innerText = i.toFixed(2);
+  
+  if (invChartInstance) {
+      invChartInstance.data.datasets[1].data[0] = {x: d, y: i};
+      invChartInstance.update();
+  }
+}
+
+function revealChartCurve() {
+  if (invChartInstance) {
+      invChartInstance.data.datasets[0].hidden = false;
+      invChartInstance.update();
+      
+      const d = parseFloat(document.getElementById('guess-d').value);
+      const i = parseFloat(document.getElementById('guess-i').value);
+      const trueI = 1 / Math.pow(d, 2);
+      
+      if(Math.abs(trueI - i) < 0.05) {
+         document.getElementById('successFlash').classList.add('run');
+         setTimeout(() => document.getElementById('successFlash').classList.remove('run'), 500);
+      }
+      document.getElementById('btnNextCh3').classList.add('show');
+  }
+}
+
+function toggleChartScale() {
+  if (!invChartInstance) return;
+  invChartIsLog = !invChartIsLog;
+  invChartInstance.options.scales.x.type = invChartIsLog ? 'logarithmic' : 'linear';
+  invChartInstance.options.scales.y.type = invChartIsLog ? 'logarithmic' : 'linear';
+  
+  if (invChartIsLog) {
+      invChartInstance.options.scales.y.min = 0.005;
+      invChartInstance.options.scales.y.max = 1.5;
+  } else {
+      invChartInstance.options.scales.y.min = 0;
+      invChartInstance.options.scales.y.max = 1.0;
+  }
+  
+  document.getElementById('logEqText').style.display = invChartIsLog ? 'block' : 'none';
+  invChartInstance.update();
+}
+
+
+/* ════════ CHAPTER 3: DRAG AND DROP (BULLETPROOF VERSION) ════════ */
+let ch3ActiveDrag = null;
+let ch3StartX=0, ch3StartY=0, ch3InitLeft=0, ch3InitTop=0;
+let ch3SlotContents = [null, null, null, null, null]; 
+
+// Adjusted positions so they beautifully sit inside the drag-sky area initially
+const ch3SkyPositions = [
+  { left: 'calc(20% - 45px)', top: '25%' }, 
+  { left: 'calc(80% - 45px)', top: '20%' }, 
+  { left: 'calc(50% - 45px)', top: '30%' }, 
+  { left: 'calc(35% - 45px)', top: '45%' }, 
+  { left: 'calc(65% - 45px)', top: '40%' }, 
+];
+
+function initCh3DragDrop() {
+  ch3SlotContents = [null, null, null, null, null];
+  const draggables = document.querySelectorAll('.draggable-obj');
+  const slots = document.querySelectorAll('.slot-box');
+  const ch3Layout = document.getElementById('ch3Layout');
+  const btnCheck = document.getElementById('btnCheck');
+
+  slots.forEach(s => { s.classList.remove('correct', 'error', 'hovered'); });
+  document.getElementById('ch3Insight').classList.remove('show');
+  btnCheck.disabled = true; btnCheck.style.display = 'block';
+  document.getElementById('btnNextCh4').classList.remove('show');
+
+  draggables.forEach((obj, idx) => {
+    obj.dataset.slotIndex = "-1"; 
+    ch3Layout.appendChild(obj); // strictly inside ch3Layout
+    obj.classList.remove('snapping', 'dragging', 'show-mag'); // <--- Ensure mag labels are hidden on reset
+    obj.style.margin = '0'; 
+    obj.style.left = ch3SkyPositions[idx].left; 
+    obj.style.top = ch3SkyPositions[idx].top;
+    
+    // Only assign event once
+    obj.onpointerdown = ch3DragStart;
+  });
+
+  // Re-calculate slot positions if screen resizes to keep perfectly snapped
+  window.removeEventListener('resize', ch3HandleResize);
+  window.addEventListener('resize', ch3HandleResize);
+}
+
+function ch3DragStart(e) {
+  if (document.getElementById('ch3Insight').classList.contains('show')) return;
+  ch3ActiveDrag = this; 
+  ch3ActiveDrag.setPointerCapture(e.pointerId);
+
+  // Switch to drag styling instantly (no transition)
+  ch3ActiveDrag.classList.remove('snapping', 'show-mag'); // <--- hide m label while dragging
+  ch3ActiveDrag.classList.add('dragging');
+
+  const currSlot = ch3ActiveDrag.dataset.slotIndex;
+  
+  if (currSlot !== "-1") {
+    // Already in a slot? clear it out.
+    ch3SlotContents[parseInt(currSlot)] = null;
+    ch3ActiveDrag.dataset.slotIndex = "-1"; 
+    ch3CheckAllPlaced();
+  }
+
+  ch3StartX = e.clientX; ch3StartY = e.clientY;
+  ch3InitLeft = ch3ActiveDrag.offsetLeft; ch3InitTop = ch3ActiveDrag.offsetTop;
+
+  ch3ActiveDrag.onpointermove = ch3DragMove; 
+  ch3ActiveDrag.onpointerup = ch3DragEnd;
+}
+
+function ch3DragMove(e) {
+  if (!ch3ActiveDrag) return;
+  ch3ActiveDrag.style.left = (ch3InitLeft + e.clientX - ch3StartX) + 'px';
+  ch3ActiveDrag.style.top = (ch3InitTop + e.clientY - ch3StartY) + 'px';
+
+  const dragRect = ch3ActiveDrag.getBoundingClientRect();
+  const dragCX = dragRect.left + dragRect.width/2, dragCY = dragRect.top + dragRect.height/2;
+
+  document.querySelectorAll('.slot-box').forEach(slot => {
+    const sRect = slot.getBoundingClientRect();
+    if (dragCX > sRect.left - 20 && dragCX < sRect.right + 20 && dragCY > sRect.top - 20 && dragCY < sRect.bottom + 20) {
+        slot.classList.add('hovered');
+    } else {
+        slot.classList.remove('hovered');
+    }
+  });
+}
+
+function ch3DragEnd(e) {
+  if (!ch3ActiveDrag) return;
+  ch3ActiveDrag.releasePointerCapture(e.pointerId);
+  ch3ActiveDrag.onpointermove = null; ch3ActiveDrag.onpointerup = null;
+  
+  // Re-enable transition for smooth snapping
+  ch3ActiveDrag.classList.remove('dragging');
+  ch3ActiveDrag.classList.add('snapping');
+
+  const dragRect = ch3ActiveDrag.getBoundingClientRect();
+  const dragCX = dragRect.left + dragRect.width/2, dragCY = dragRect.top + dragRect.height/2;
+  let snapped = false;
+  const slots = document.querySelectorAll('.slot-box');
+
+  for (let i = 0; i < slots.length; i++) {
+    const slot = slots[i]; 
+    slot.classList.remove('hovered'); 
+    const sRect = slot.getBoundingClientRect();
+    
+    // Generous hit box
+    if (dragCX > sRect.left - 20 && dragCX < sRect.right + 20 && dragCY > sRect.top - 20 && dragCY < sRect.bottom + 20) {
+      ch3SnapToSlot(ch3ActiveDrag, i, slot); 
+      snapped = true; 
+      break;
+    }
+  }
+
+  // Go back to the sky if missed
+  if (!snapped) {
+    const originalIdx = parseInt(ch3ActiveDrag.dataset.val) - 1;
+    ch3ActiveDrag.style.left = ch3SkyPositions[originalIdx].left;
+    ch3ActiveDrag.style.top = ch3SkyPositions[originalIdx].top;
+  }
+  ch3ActiveDrag = null; 
+  ch3CheckAllPlaced();
+}
+
+function ch3SnapToSlot(obj, slotIdx, slotElement) {
+  // If slot is occupied by another star, boot it out
+  if (ch3SlotContents[slotIdx] !== null && ch3SlotContents[slotIdx] !== obj) {
+    const oldObj = ch3SlotContents[slotIdx]; 
+    const oldIdx = parseInt(oldObj.dataset.val) - 1;
+    oldObj.dataset.slotIndex = "-1"; 
+    oldObj.classList.add('snapping');
+    oldObj.classList.remove('show-mag'); // <--- Hide m label
+    oldObj.style.left = ch3SkyPositions[oldIdx].left; 
+    oldObj.style.top = ch3SkyPositions[oldIdx].top;
+  }
+
+  obj.dataset.slotIndex = slotIdx; 
+  ch3SlotContents[slotIdx] = obj;
+  
+  ch3PositionObjInSlot(obj, slotElement);
+}
+
+function ch3PositionObjInSlot(obj, slotElement) {
+  const layoutRect = document.getElementById('ch3Layout').getBoundingClientRect();
+  const sRect = slotElement.getBoundingClientRect();
+  
+  // Calculate position relative to layout container
+  const targetX = sRect.left + (sRect.width / 2) - layoutRect.left - (obj.offsetWidth / 2);
+  const targetY = sRect.top + (sRect.height / 2) - layoutRect.top - (obj.offsetHeight / 2);
+
+  obj.style.left = targetX + 'px';
+  obj.style.top = targetY + 'px';
+}
+
+function ch3HandleResize() {
+  if (document.getElementById('ch3Scene').style.display === 'none') return;
+  const slots = document.querySelectorAll('.slot-box');
+  ch3SlotContents.forEach((obj, idx) => {
+    if (obj) {
+      obj.classList.remove('snapping'); // Do it instantly so it doesn't float around on resize
+      ch3PositionObjInSlot(obj, slots[idx]);
+    }
+  });
+}
+
+function ch3CheckAllPlaced() {
+  const btnCheck = document.getElementById('btnCheck');
+  btnCheck.disabled = !ch3SlotContents.every(item => item !== null);
+  document.querySelectorAll('.slot-box').forEach(s => s.classList.remove('error'));
+}
+
+/* ❗️ FIXED THIS FUNCTION TO SHOW m VALUES CORRECTLY ❗️ */
+function checkAnswer() {
+  let correctCount = 0;
+  const slots = document.querySelectorAll('.slot-box');
+  ch3SlotContents.forEach((obj, idx) => {
+    if (obj.dataset.val === (idx + 1).toString()) { 
+        slots[idx].classList.add('correct'); 
+        obj.classList.add('show-mag'); // <--- THIS ADDS THE CLASS TO SHOW THE LABEL
+        correctCount++; 
+    } 
+    else { 
+        slots[idx].classList.remove('correct'); 
+        obj.classList.remove('show-mag'); // <--- THIS REMOVES IT IF WRONG
+        void slots[idx].offsetWidth; 
+        slots[idx].classList.add('error'); 
+    }
+  });
+
+  if (correctCount === 5) {
+    document.getElementById('successFlash').classList.add('run'); setTimeout(() => document.getElementById('successFlash').classList.remove('run'), 800);
+    document.getElementById('ch3Insight').classList.add('show'); document.getElementById('btnCheck').style.display = 'none';
+    document.getElementById('btnNextCh4').classList.add('show');
+  }
+}
+
+
+/* ════════ CHAPTER 4: ABSOLUTE MAGNITUDE (SANDBOX) ════════ */
+let isCh4ZoomedOut = false;
+let activeCh4StarId = null;
+let ch4DragStartX = 0, ch4DragStartY = 0, ch4DragStartT = 0;
+
+const CX = 100; const CY = 550; 
+const ch4Data = {
+  moon:    { id: 'moon',    row: 15, a: 5,  rT: 40,  r10: 400, sApp: 75, sAbs: 10, gApp: '0 0 20px #fff, 0 0 60px rgba(255,255,255,0.8)', gAbs: '0 0 5px #fff', bgApp: '#fff', bgAbs: '#555', lblApp: '<span class="m-text">m = </span>-12.7', lblAbs: '<span class="m-text">M = </span>+32' },
+  sirius:  { id: 'sirius',  row: 32, a: 15, rT: 150, r10: 400, sApp: 30, sAbs: 15, gApp: '0 0 15px #fff, 0 0 30px #a0d2ff', gAbs: '0 0 10px #a0d2ff, 0 0 30px rgba(160,210,255,0.8)', bgApp: '#fff', bgAbs: '#fff', lblApp: '<span class="m-text">m = </span>-1.46', lblAbs: '<span class="m-text">M = </span>+1.4' },
+  vega:    { id: 'vega',    row: 50, a: 25, rT: 280, r10: 400, sApp: 20, sAbs: 25, gApp: '0 0 10px #fff, 0 0 25px #88ccff', gAbs: '0 0 15px #88ccff, 0 0 40px rgba(136,204,255,0.8)', bgApp: '#fff', bgAbs: '#fff', lblApp: '<span class="m-text">m = </span>0.0', lblAbs: '<span class="m-text">M = </span>+0.6' },
+  polaris: { id: 'polaris', row: 68, a: 35, rT: 850, r10: 400, sApp: 10, sAbs: 90, gApp: '0 0 8px #ffb464', gAbs: '0 0 40px #fff, 0 0 120px #ffb464', bgApp: '#ffd0aa', bgAbs: '#ffd0aa', lblApp: '<span class="m-text">m = </span>2.0', lblAbs: '<span class="m-text">M = </span>-3.6' },
+  faint:   { id: 'faint',   row: 85, a: 45, rT: 650, r10: 400, sApp: 4,  sAbs: 45, gApp: '0 0 4px rgba(255,255,255,0.3)', gAbs: '0 0 15px rgba(255,100,100,0.4)', bgApp: '#bbb', bgAbs: '#ff9988', lblApp: '<span class="m-text">m = </span>6.0', lblAbs: '<span class="m-text">M = </span>-3.0' }
+};
+
+for(let k in ch4Data) {
+  let d = ch4Data[k]; let rad = d.a * Math.PI / 180;
+  d.xT = CX + d.rT * Math.cos(rad); d.yT = CY - d.rT * Math.sin(rad); 
+  d.x10 = CX + d.r10 * Math.cos(rad); d.y10 = CY - d.r10 * Math.sin(rad); 
+  d.xR = CX + 1000 * Math.cos(rad); d.yR = CY - 1000 * Math.sin(rad); 
+  d.isAt10pc = false;
+}
+
+function initCh4() {
+  isCh4ZoomedOut = false;
+  for(let k in ch4Data) ch4Data[k].isAt10pc = false;
+  
+  document.getElementById('ch4Prompt').innerHTML = "Comparing Apparent (m) vs Absolute (M) Brightness from Earth.";
+  document.getElementById('btnCh4Camera').innerHTML = "Zoom Out 🔭";
+  document.getElementById('btnCh4Align').style.display = 'none';
+  document.getElementById('btnCh4Reset').style.display = 'none';
+  document.getElementById('btnFinish').style.display = 'none'; document.getElementById('btnFinish').style.opacity = '0';
+  
+  for(let k in ch4Data) {
+    let d = ch4Data[k]; let line = document.getElementById('ray-' + d.id);
+    line.setAttribute('x1', CX); line.setAttribute('y1', CY); line.setAttribute('x2', d.xR); line.setAttribute('y2', d.yR);
+  }
+
+  document.querySelectorAll('.ch4-sc').forEach(sc => {
+    sc.onpointerdown = function(e) {
+      if(!isCh4ZoomedOut) return;
+      activeCh4StarId = this.dataset.starId; let d = ch4Data[activeCh4StarId];
+      ch4DragStartX = e.clientX; ch4DragStartY = e.clientY; ch4DragStartT = d.isAt10pc ? 1 : 0;
+      this.classList.add('dragging'); this.setPointerCapture(e.pointerId);
+    };
+    sc.onpointermove = function(e) {
+      if(activeCh4StarId !== this.dataset.starId) return;
+      let d = ch4Data[activeCh4StarId];
+      let dx = e.clientX - ch4DragStartX, dy = e.clientY - ch4DragStartY;
+      let move_t = (dx - dy) / 400; if((d.r10 - d.rT) < 0) move_t = -move_t; 
+      d.current_t = Math.max(0, Math.min(1, ch4DragStartT + move_t));
+      this.style.left = ((d.xT + d.current_t * (d.x10 - d.xT)) / 10) + '%';
+      this.style.top = ((d.yT + d.current_t * (d.y10 - d.yT)) / 6) + '%';
+    };
+    sc.onpointerup = function(e) {
+      if(activeCh4StarId !== this.dataset.starId) return;
+      let d = ch4Data[activeCh4StarId];
+      this.classList.remove('dragging'); this.releasePointerCapture(e.pointerId);
+      if(d.current_t !== undefined) {
+        d.isAt10pc = d.current_t > 0.5;
+        if(Math.abs(e.clientX - ch4DragStartX) < 5 && Math.abs(e.clientY - ch4DragStartY) < 5) d.isAt10pc = !d.isAt10pc; 
+      }
+      d.current_t = undefined; activeCh4StarId = null; renderCh4(); 
+    };
+  });
+  renderCh4();
+}
+
+function toggleCh4Camera() {
+  isCh4ZoomedOut = !isCh4ZoomedOut;
+  const prompt = document.getElementById('ch4Prompt');
+  if (isCh4ZoomedOut) {
+      document.getElementById('btnCh4Camera').innerHTML = "View from Earth 🌍";
+      document.getElementById('btnCh4Align').style.display = "inline-block"; document.getElementById('btnCh4Reset').style.display = "inline-block";
+      prompt.innerHTML = "Zoom out, then drag stars to the 10 pc line to see their True Brightness!";
+  } else {
+      document.getElementById('btnCh4Camera').innerHTML = "Zoom Out 🔭";
+      document.getElementById('btnCh4Align').style.display = "none"; document.getElementById('btnCh4Reset').style.display = "none";
+      prompt.innerHTML = "Comparing Apparent (m) vs Absolute (M) Brightness from Earth.";
+      document.getElementById('btnFinish').style.display = 'flex'; setTimeout(() => { document.getElementById('btnFinish').style.opacity = '1'; }, 100);
+  }
+  renderCh4();
+}
+
+function alignAll10pc() { for(let k in ch4Data) ch4Data[k].isAt10pc = true; renderCh4(); }
+function resetAllTrueDist() { for(let k in ch4Data) ch4Data[k].isAt10pc = false; renderCh4(); }
+
+function renderCh4() {
+  if (isCh4ZoomedOut) {
+    document.getElementById('ch4Earth').classList.add('show'); document.getElementById('arc-10pc').classList.add('show'); document.getElementById('ch4ArcLabel').classList.add('show');
+    for(let k in ch4Data) {
+      let d = ch4Data[k]; let sc = document.getElementById('ch4-sc-' + d.id); let obj = document.getElementById('ch4-obj-' + d.id);
+      sc.classList.add('draggable'); document.getElementById('ray-' + d.id).classList.add('show');
+      obj.style.width = d.sAbs + 'px'; obj.style.height = d.sAbs + 'px'; obj.style.boxShadow = d.gAbs; obj.style.background = d.bgAbs;
+      sc.style.left = (d.isAt10pc ? d.x10/10 : d.xT/10) + '%'; sc.style.top = (d.isAt10pc ? d.y10/6 : d.yT/6) + '%';
+      document.getElementById('ch4-mag-' + d.id).classList.remove('show'); sc.querySelector('.ch4-name').style.opacity = '0.5';
+    }
+  } else {
+    document.getElementById('ch4Earth').classList.remove('show'); document.getElementById('arc-10pc').classList.remove('show'); document.getElementById('ch4ArcLabel').classList.remove('show');
+    for(let k in ch4Data) {
+      let d = ch4Data[k]; let sc = document.getElementById('ch4-sc-' + d.id); let obj = document.getElementById('ch4-obj-' + d.id); let mag = document.getElementById('ch4-mag-' + d.id);
+      sc.classList.remove('draggable'); document.getElementById('ray-' + d.id).classList.remove('show');
+      sc.style.left = d.row + '%'; sc.style.top = '40%';
+      obj.style.width = (d.isAt10pc ? d.sAbs : d.sApp) + 'px'; obj.style.height = (d.isAt10pc ? d.sAbs : d.sApp) + 'px';
+      obj.style.boxShadow = d.isAt10pc ? d.gAbs : d.gApp; obj.style.background = d.isAt10pc ? d.bgAbs : d.bgApp;
+      mag.innerHTML = d.isAt10pc ? d.lblAbs : d.lblApp; mag.classList.add('show'); sc.querySelector('.ch4-name').style.opacity = '1';
+    }
+  }
+}
+</script>
+</body>
+</html>

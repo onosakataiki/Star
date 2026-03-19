@@ -392,10 +392,9 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 
 /* Expanding Workspace */
 .ch6-workspace-section { 
-  width: 100%; max-width: 900px; background: rgba(0,0,0,0.6); border-radius: 20px; padding: 30px; 
+  width: 100%; max-width: 1050px; background: rgba(0,0,0,0.6); border-radius: 20px; padding: 30px; 
   border: 1px solid rgba(255,255,255,0.2); display: none; flex-direction: column; align-items: center; 
   box-shadow: 0 10px 40px rgba(0,0,0,0.8); margin-bottom: 40px; 
-  -webkit-user-select: none; user-select: none; /* Prevents text selection while drawing */
 }
 .ch6-vars-box { background: rgba(9,3,20,0.8); border: 2px solid var(--pink); border-radius: 15px; padding: 20px 30px; margin-bottom: 25px; font-size: 1.2rem; line-height: 1.8; color: #fff; text-align: center; box-shadow: 0 10px 30px rgba(255,77,158,0.2); width: 100%; }
 .ch6-vars-box span.highlight { color: var(--gold); font-weight: 900; font-size: 1.4rem; margin: 0 5px; }
@@ -409,15 +408,16 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 
 /* Magical Invert Canvas - Looks dark on screen but exports white background with black ink for printers! */
 .canvas-container { 
-  width: 100%; max-width: 800px; display: flex; justify-content: center; border-radius: 15px; overflow: hidden; 
+  width: 100%; max-width: 1000px; display: flex; justify-content: center; border-radius: 15px; overflow: hidden; 
   border: 2px dashed rgba(255,255,255,0.3); background: #000; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); 
-  touch-action: none; -webkit-user-select: none; user-select: none;
+  /* Prevent scrolling, text selection, and callouts during Apple Pencil/Touch drawing */
+  touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
 }
 #calcCanvas { 
-  background: #ffffff; filter: invert(1); width: 100%; height: auto; aspect-ratio: 16/9; 
+  background: #ffffff; filter: invert(1); width: 100%; height: auto; aspect-ratio: 4/3; 
   touch-action: none; cursor: crosshair; display: block; -webkit-touch-callout: none;
 }
-.canvas-saved-img { width: 100%; height: auto; display: none; background: #fff; filter: invert(1); aspect-ratio: 16/9; object-fit: contain; pointer-events: none; }
+.canvas-saved-img { width: 100%; height: auto; display: none; background: #fff; filter: invert(1); aspect-ratio: 4/3; object-fit: contain; pointer-events: none; }
 
 .btn-pdf { background: linear-gradient(135deg, #06D6A0, #048C6F); border: none; padding: 15px 40px; font-size: 1.3rem; box-shadow: 0 10px 30px rgba(6, 214, 160, 0.4); display: none; margin-top: 20px; margin-bottom: 50px; }
 .btn-pdf.show { display: block; animation: fadeInUp 0.5s ease-out; }
@@ -435,19 +435,24 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 /* ════════ PRINT STYLES FOR PDF ════════ */
 #printArea { display: none; }
 @media print {
-  @page { margin: 15mm; size: A4; }
+  @page { margin: 10mm; size: A4 portrait; }
   html, body { background: #fff !important; color: #000 !important; overflow: visible !important; height: auto !important; min-height: auto !important; display: block !important; }
   body > *:not(#printArea) { display: none !important; }
   #printArea { display: block !important; width: 100%; font-family: sans-serif; }
-  .print-header { font-size: 14pt; margin-bottom: 30pt; font-weight: bold; padding-bottom: 10px; border-bottom: 2px solid black; }
-  .print-table { width: 100%; border-collapse: collapse; page-break-inside: auto; }
-  .print-table tr { page-break-inside: avoid; page-break-after: auto; }
-  .print-table th, .print-table td { border: 1px solid black; padding: 15px; font-size: 12pt; text-align: left; vertical-align: top; }
-  .print-table th { background: #e0e0e0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .print-col-vars { width: 30%; line-height: 1.8; }
-  .print-col-ans { width: 70%; text-align: center; }
-  /* Since image was drawn with black ink on white bg internally, it prints perfectly without wasting ink */
-  .print-col-ans img { max-width: 100%; max-height: 280px; object-fit: contain; border: 1px solid #ccc; }
+  
+  /* Each Star gets its own full page */
+  .print-page { page-break-after: always; width: 100%; height: 100%; padding-top: 10px; box-sizing: border-box; }
+  .print-page:last-child { page-break-after: auto; }
+  
+  .print-header { font-size: 14pt; margin-bottom: 20px; font-weight: bold; padding-bottom: 10px; border-bottom: 2px solid black; }
+  
+  .print-content { display: flex; align-items: flex-start; justify-content: space-between; width: 100%; }
+  
+  .print-col-vars { width: 32%; line-height: 1.8; font-size: 13pt; }
+  .print-col-ans { width: 65%; text-align: center; }
+  
+  /* Canvas image will scale down properly inside the A4 page without getting cut off */
+  .print-col-ans img { width: 100%; max-height: 800px; object-fit: contain; border: 1px solid #aaa; border-radius: 8px; }
 }
 
 /* MISC Utilities */
@@ -828,7 +833,7 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 
       <!-- Magic Canvas: Looks dark on screen but exports with white background for print! -->
       <div class="canvas-container">
-        <canvas id="calcCanvas" width="800" height="500"></canvas>
+        <canvas id="calcCanvas" width="1000" height="750"></canvas>
         <img id="calcSavedImg" class="canvas-saved-img" alt="Saved Calculation"/>
       </div>
       
@@ -857,22 +862,7 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radi
 
 <!-- PRINT AREA FOR PDF -->
 <div id="printArea">
-  <div class="print-header">
-    Name ........................................................................ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    Class ........................ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    No ........................
-  </div>
-  <table class="print-table">
-    <thead>
-      <tr>
-        <th>Star & Given Variables</th>
-        <th>Calculation Steps</th>
-      </tr>
-    </thead>
-    <tbody id="printTableBody">
-      <!-- Populated by JS -->
-    </tbody>
-  </table>
+  <!-- Populated entirely by JS for full page breaks -->
 </div>
 
 <!-- TRANSITION OVERLAY & MISC -->
@@ -1933,25 +1923,33 @@ function checkCh6Completion() {
 }
 
 function ch6GeneratePDF() {
-  const tbody = document.getElementById('printTableBody');
+  const printArea = document.getElementById('printArea');
   let html = '';
-  ch6StarsData.forEach(s => {
-    html += `<tr>
-      <td class="print-col-vars">
-        <strong>Star: ${s.name}</strong><br><br>
-        Apparent Magnitude (m) = ${s.m}<br>
-        Absolute Magnitude (M) = ${s.M}<br>
-        Distance (d) = ${s.d}<br><br>
-        <strong>Find: ${s.find}</strong>
-      </td>
-      <td class="print-col-ans">
-        ${s.ansImage ? `<img src="${s.ansImage}" alt="Calculation"/>` : '(No Calculation provided)'}
-      </td>
-    </tr>`;
-  });
-  tbody.innerHTML = html;
   
-  // Call browser's native print to generate/save as PDF
+  ch6StarsData.forEach((s, index) => {
+    html += `
+    <div class="print-page">
+      <div class="print-header">
+        Name ........................................................................ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Class ........................ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        No ........................
+      </div>
+      <div class="print-content">
+        <div class="print-col-vars">
+          <strong>Question ${index + 1}: ${s.name}</strong><br><br>
+          Apparent Magnitude (m) = ${s.m}<br>
+          Absolute Magnitude (M) = ${s.M}<br>
+          Distance (d) = ${s.d}<br><br>
+          <strong>Find: ${s.find}</strong>
+        </div>
+        <div class="print-col-ans">
+          ${s.ansImage ? `<img src="${s.ansImage}" alt="Calculation"/>` : '(No Calculation provided)'}
+        </div>
+      </div>
+    </div>`;
+  });
+  
+  printArea.innerHTML = html;
   window.print();
 }
 
